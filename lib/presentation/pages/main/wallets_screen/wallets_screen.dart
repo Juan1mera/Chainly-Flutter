@@ -34,6 +34,7 @@ class _WalletsScreenState extends State<WalletsScreen> {
   // Lista de monedas soportadas
   final List<String> _currencies = [
     'USD',
+    'COP',
     'EUR',
     'GBP',
     'MXN',
