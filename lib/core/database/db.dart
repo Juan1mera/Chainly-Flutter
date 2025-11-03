@@ -19,193 +19,58 @@ class Db {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "veterinary.db");
-    
+    String path = join(documentsDirectory.path, "wallets.db");
+
     return await openDatabase(
       path,
-      version: 2, // Incrementado para soportar migración
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade, // Agregado para manejar migraciones
+      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Create Species table
+    // Create wallets table
     await db.execute('''
-      CREATE TABLE species(
+      CREATE TABLE wallets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE
-      )
-    ''');
-
-    // Create Breeds table
-    await db.execute('''
-      CREATE TABLE breeds(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        species_id INTEGER NOT NULL,
         name TEXT NOT NULL,
-        FOREIGN KEY (species_id) REFERENCES species (id) ON DELETE RESTRICT,
-        UNIQUE (species_id, name)
+        color TEXT NOT NULL,
+        currency TEXT NOT NULL,
+        balance REAL NOT NULL DEFAULT 0.0,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        is_archived INTEGER NOT NULL DEFAULT 0,
+        type TEXT NOT NULL CHECK(type IN ('bank', 'cash')),
+        created_at TEXT NOT NULL,
+        icon_bank TEXT
       )
     ''');
 
-    // Create Animals table
+    // Create categories table
     await db.execute('''
-      CREATE TABLE animals(
+      CREATE TABLE categories(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        owner_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        species_id INTEGER NOT NULL,
-        breed_id INTEGER,
-        birth_date TEXT,
-        gender TEXT,
-        coat TEXT,
-        purpose TEXT,
-        description TEXT,
-        location TEXT,
-        is_pregnant INTEGER DEFAULT 0,
-        pregnant_date TEXT,
-        is_sterilized INTEGER DEFAULT 0,
-        in_treatment INTEGER DEFAULT 0,
-        is_favorite INTEGER DEFAULT 0, 
-        creation_date TEXT NOT NULL,
-        FOREIGN KEY (species_id) REFERENCES species (id) ON DELETE RESTRICT,
-        FOREIGN KEY (breed_id) REFERENCES breeds (id) ON DELETE SET NULL
+        name TEXT NOT NULL UNIQUE,
+        monthly_budget REAL DEFAULT 0.0,
+        icon TEXT,
+        color TEXT
       )
     ''');
 
-    // Create Weights table
+    // Create transactions table
     await db.execute('''
-      CREATE TABLE weights(
+      CREATE TABLE transactions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        weight_kg REAL NOT NULL,
-        date TEXT NOT NULL,
-        notes TEXT,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Images table
-    await db.execute('''
-      CREATE TABLE images(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        image_url TEXT NOT NULL,
-        date TEXT NOT NULL,
-        description TEXT,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Notes table
-    await db.execute('''
-      CREATE TABLE notes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        date TEXT NOT NULL,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Events table
-    await db.execute('''
-      CREATE TABLE events(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        description TEXT NOT NULL,
-        event_date TEXT NOT NULL,
-        notes TEXT,
-        is_recurring_instance INTEGER DEFAULT 0,
-        completed INTEGER DEFAULT 0,
-        creation_date TEXT NOT NULL,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Vaccines table
-    await db.execute('''
-      CREATE TABLE vaccines(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        expiration_date TEXT,
-        lot_number TEXT,
-        application_date TEXT NOT NULL,
-        veterinary_clinic TEXT,
-        veterinarian_name TEXT,
-        professional_card_number TEXT,
-        vaccine_photo TEXT,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Medications table
-    await db.execute('''
-      CREATE TABLE medications(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        expiration_date TEXT,
-        lot_number TEXT,
-        application_date TEXT NOT NULL,
-        veterinarian_name TEXT,
-        medication_name TEXT NOT NULL,
-        medication_photo TEXT,
-        dosage TEXT,
-        next_application TEXT,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Records table
-    await db.execute('''
-      CREATE TABLE records(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        name TEXT NOT NULL,
+        wallet_id INTEGER NOT NULL,
         comment TEXT,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Chats table
-    await db.execute('''
-      CREATE TABLE chats(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        creation_date TEXT NOT NULL,
-        is_ai_chat INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Messages table
-    await db.execute('''
-      CREATE TABLE messages(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        chat_id INTEGER NOT NULL,
-        content TEXT NOT NULL,
-        is_from_user INTEGER NOT NULL,
-        creation_date TEXT NOT NULL,
-        FOREIGN KEY (chat_id) REFERENCES chats (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // Create Heat Cycles table
-    await db.execute('''
-      CREATE TABLE heat_cycles(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        animal_id INTEGER NOT NULL,
-        start_date TEXT NOT NULL,
-        end_date TEXT,
-        duration_days INTEGER,
-        notes TEXT,
-        creation_date TEXT NOT NULL,
-        FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
+        type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer')),
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        category_id INTEGER,
+        currency TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
       )
     ''');
 
@@ -213,54 +78,23 @@ class Db {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Agregar tabla heat_cycles para bases de datos existentes
-      await db.execute('''
-        CREATE TABLE heat_cycles(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          animal_id INTEGER NOT NULL,
-          start_date TEXT NOT NULL,
-          end_date TEXT,
-          duration_days INTEGER,
-          notes TEXT,
-          creation_date TEXT NOT NULL,
-          FOREIGN KEY (animal_id) REFERENCES animals (id) ON DELETE CASCADE
-        )
-      ''');
-
-      // Agregar índices para heat_cycles
-      await db.execute('CREATE INDEX idx_heat_cycles_animal ON heat_cycles(animal_id)');
-      await db.execute('CREATE INDEX idx_heat_cycles_start_date ON heat_cycles(start_date)');
-    }
+    // Funcion para manejar migraciones y cambios en la db
   }
 
   Future<void> _createIndexes(Database db) async {
-    // Indexes for foreign keys
-    await db.execute('CREATE INDEX idx_animals_owner ON animals(owner_id)');
-    await db.execute('CREATE INDEX idx_animals_species ON animals(species_id)');
-    await db.execute('CREATE INDEX idx_animals_breed ON animals(breed_id)');
-    await db.execute('CREATE INDEX idx_breeds_species ON breeds(species_id)');
-    await db.execute('CREATE INDEX idx_weights_animal ON weights(animal_id)');
-    await db.execute('CREATE INDEX idx_images_animal ON images(animal_id)');
-    await db.execute('CREATE INDEX idx_notes_animal ON notes(animal_id)');
-    await db.execute('CREATE INDEX idx_events_animal ON events(animal_id)');
-    await db.execute('CREATE INDEX idx_vaccines_animal ON vaccines(animal_id)');
-    await db.execute('CREATE INDEX idx_medications_animal ON medications(animal_id)');
-    await db.execute('CREATE INDEX idx_records_animal ON records(animal_id)');
-    await db.execute('CREATE INDEX idx_chats_animal ON chats(animal_id)');
-    await db.execute('CREATE INDEX idx_messages_chat ON messages(chat_id)');
-    await db.execute('CREATE INDEX idx_heat_cycles_animal ON heat_cycles(animal_id)'); // Nuevo
-    await db.execute('CREATE INDEX idx_heat_cycles_start_date ON heat_cycles(start_date)'); // Nuevo
-    
-    // Indexes for dates
-    await db.execute('CREATE INDEX idx_events_date ON events(event_date)');
-    await db.execute('CREATE INDEX idx_weights_date ON weights(date)');
-    await db.execute('CREATE INDEX idx_vaccines_date ON vaccines(application_date)');
-    await db.execute('CREATE INDEX idx_medications_date ON medications(application_date)');
-    await db.execute('CREATE INDEX idx_notes_date ON notes(date)');
-    await db.execute('CREATE INDEX idx_records_date ON records(date)');
-    await db.execute('CREATE INDEX idx_chats_date ON chats(creation_date)');
-    await db.execute('CREATE INDEX idx_messages_date ON messages(creation_date)');
+    // Índices para mejorar rendimiento en consultas
+    await db.execute('CREATE INDEX idx_wallets_is_favorite ON wallets(is_favorite)');
+    await db.execute('CREATE INDEX idx_wallets_is_archived ON wallets(is_archived)');
+    await db.execute('CREATE INDEX idx_wallets_type ON wallets(type)');
+    await db.execute('CREATE INDEX idx_wallets_created_at ON wallets(created_at)');
+
+    await db.execute('CREATE INDEX idx_categories_name ON categories(name)');
+
+    await db.execute('CREATE INDEX idx_transactions_wallet ON transactions(wallet_id)');
+    await db.execute('CREATE INDEX idx_transactions_type ON transactions(type)');
+    await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
+    await db.execute('CREATE INDEX idx_transactions_category ON transactions(category_id)');
+    await db.execute('CREATE INDEX idx_transactions_currency ON transactions(currency)');
   }
 
   Future<void> close() async {
@@ -271,7 +105,7 @@ class Db {
 
   Future<void> deleteDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "veterinary.db");
+    String path = join(documentsDirectory.path, "wallets.db");
     await databaseFactory.deleteDatabase(path);
     _database = null;
   }
