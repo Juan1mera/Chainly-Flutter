@@ -7,7 +7,7 @@ class WalletService {
   final AuthService _authService = AuthService();
 
   Future<int> createWallet(Wallet wallet) async {
-    final userEmail = _authService.getCurrentUserEmail();
+    final userEmail = _authService.currentUserEmail;
     if (userEmail == null) throw Exception('User not authenticated');
 
     final db = await _db.database;
@@ -18,7 +18,7 @@ class WalletService {
     bool onlyFavorites = false,
     bool includeArchived = false,
   }) async {
-    final userEmail = _authService.getCurrentUserEmail();
+    final userEmail = _authService.currentUserEmail;
     if (userEmail == null) return [];
 
     final db = await _db.database;

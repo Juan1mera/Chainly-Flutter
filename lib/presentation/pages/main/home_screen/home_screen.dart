@@ -3,7 +3,6 @@ import 'package:wallet_app/models/transaction_model.dart';
 import 'package:wallet_app/models/wallet_model.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/header_home_section.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/wallets_home_section.dart';
-import 'package:wallet_app/presentation/widgets/ui/custom_header.dart';
 import 'package:wallet_app/services/transaction_service.dart';
 import 'package:wallet_app/services/wallet_service.dart';
 

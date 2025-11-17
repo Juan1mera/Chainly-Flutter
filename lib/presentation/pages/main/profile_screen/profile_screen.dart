@@ -14,55 +14,126 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
-  User? _user;
-  bool _isLoading = true;
-  String? _displayName;
+  bool _isLoading = false;
+
+  // Obtener datos en tiempo real del usuario actual
+  User? get _user => Supabase.instance.client.auth.currentUser;
+  String? get _displayName => _user?.userMetadata?['display_name'] ?? _user?.userMetadata?['name'];
+  String? get _avatarUrl => _user?.userMetadata?['avatar_url'];
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    // Escuchar cambios en el estado de autenticación
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (mounted) setState(() {});
+    });
   }
 
-  void _loadUserData() {
-    setState(() {
-      _isLoading = true;
-    });
-
+  // === SUBIR IMAGEN (usa el método del AuthService que incluye ImagePicker) ===
+  Future<void> _uploadImage() async {
     try {
-      final currentUser = Supabase.instance.client.auth.currentUser;
-      setState(() {
-        _user = currentUser;
-        final metadata = currentUser?.userMetadata ?? {};
-        final name = metadata['display_name'] ?? metadata['name'];
-        setState(() {
-          _displayName = name;
-        });
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = true);
+      
+      // Este método ya incluye la selección de imagen
+      await _authService.uploadProfilePicture();
+      
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos: $e')),
+          const SnackBar(
+            content: Text('✅ Foto de perfil actualizada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  String _formatDate(String? dateTime) {
-    if (dateTime == null) return 'No disponible';
+  // === ELIMINAR IMAGEN ===
+  Future<void> _deleteImage() async {
     try {
-      final date = DateTime.parse(dateTime);
-      return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+      setState(() => _isLoading = true);
+      
+      await _authService.deleteProfilePicture();
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🗑️ Foto eliminada'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
-      return 'Fecha inválida';
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  Future<bool> _showSignOutDialog() async {
+  // === OPCIONES DE IMAGEN ===
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: AppColors.verdeLight),
+                title: const Text('Cambiar foto de perfil'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _uploadImage();
+                },
+              ),
+              if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Eliminar foto actual'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _deleteImage();
+                  },
+                ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: const Text('Cancelar'),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // === DIÁLOGO DE CONFIRMACIÓN ===
+  Future<bool> _confirmSignOut() async {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -75,6 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
                 child: const Text('Cerrar Sesión'),
               ),
             ],
@@ -83,149 +155,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
         false;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomHeader(
-        title: 'Mi Perfil',
-        onPress: () async {
-          if (await _showSignOutDialog()) {
-            await _authService.signOut();
-          }
-        },
-        iconOnPress: Icons.logout, actions: [],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _user == null
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      SizedBox(height: 16),
-                      Text(
-                        'No se pudo cargar la información del usuario',
-                        style: TextStyle(fontSize: 18),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+  // === AVATAR CON LOADING ===
+  Widget _buildAvatar() {
+    return Stack(
+      children: [
+        // Avatar principal
+        CircleAvatar(
+          radius: 60,
+          backgroundColor: AppColors.verdeLight,
+          backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+              ? NetworkImage(_avatarUrl!)
+              : null,
+          child: _avatarUrl == null || _avatarUrl!.isEmpty
+              ? Text(
+                  (_user?.email?[0] ?? 'U').toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 40,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    _loadUserData();
-                  },
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Column(
-                            children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: AppColors.verdeLight,
-                                child: Text(
-                                  _user!.email != null && _user!.email!.isNotEmpty
-                                      ? _user!.email![0].toUpperCase()
-                                      : 'U',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _authService.getCurrentUserName() ?? _user!.email ?? 'Usuario',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Card(
-                          elevation: 0,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Información de la Cuenta',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildInfoRow(
-                                  icon: Icons.email,
-                                  label: 'Email',
-                                  value: _user!.email ?? 'No disponible',
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.person,
-                                  label: 'Nombre',
-                                  value: _displayName ?? 'Nombre no disponible',
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.fingerprint,
-                                  label: 'ID de Usuario',
-                                  value: _user!.id,
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.phone,
-                                  label: 'Teléfono',
-                                  value: _user!.phone ?? 'No configurado',
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.calendar_today,
-                                  label: 'Cuenta creada',
-                                  value: _formatDate(_user!.createdAt),
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.access_time,
-                                  label: 'Último acceso',
-                                  value: _formatDate(_user!.lastSignInAt),
-                                ),
-                                _buildInfoRow(
-                                  icon: Icons.verified_user,
-                                  label: 'Email verificado',
-                                  value: _user!.emailConfirmedAt != null ? 'Sí' : 'No',
-                                  valueColor: _user!.emailConfirmedAt != null ? Colors.green : Colors.orange,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        CustomButton(
-                          text: 'Cerrar Sesión',
-                          onPressed: () async {
-                            if (await _showSignOutDialog()) {
-                              await _authService.signOut();
-                            }
-                          },
-                          bgColor: AppColors.rojo,
-                          textColor: AppColors.fondoPrincipal,
-                          leftIcon: const Icon(Icons.logout),
-                        ),
-                        const SizedBox(height: 100,)
-                      ],
+              : null,
+        ),
+
+        // Loading overlay
+        if (_isLoading)
+          Positioned.fill(
+            child: CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.black54,
+              child: const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              ),
+            ),
+          ),
+
+        // Botón de cámara
+        if (!_isLoading)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _showImageOptions,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.verdeLight,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
+                  ],
                 ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
+  // === FORMATO DE FECHA ===
+  String _formatDate(String? dateTime) {
+    if (dateTime == null) return 'No disponible';
+    try {
+      final date = DateTime.parse(dateTime);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'Fecha inválida';
+    }
+  }
+
+  // === INFO ROW ===
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -233,38 +243,184 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color? valueColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Colors.grey[600],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.verdeLight.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: AppColors.verdeLight),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   value,
                   style: TextStyle(
                     fontSize: 16,
-                    color: valueColor,
+                    color: valueColor ?? Colors.black87,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Perfil')),
+        body: const Center(
+          child: Text('No hay usuario autenticado'),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: CustomHeader(
+        title: 'Mi Perfil',
+        onPress: () async {
+          if (await _confirmSignOut()) {
+            await _authService.signOut();
+          }
+        },
+        iconOnPress: Icons.logout,
+        actions: const [],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // === AVATAR Y NOMBRE ===
+            GestureDetector(
+              onTap: _showImageOptions,
+              child: _buildAvatar(),
+            ),
+            const SizedBox(height: 20),
+            
+            Text(
+              _displayName ?? 'Usuario',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            
+            Text(
+              _user!.email ?? '',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            
+            if (_avatarUrl == null || _avatarUrl!.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  'Toca el ícono de cámara para añadir una foto',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+            const SizedBox(height: 32),
+
+            // === INFORMACIÓN ===
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Información de la Cuenta',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInfoRow(
+                      icon: Icons.email,
+                      label: 'Email',
+                      value: _user!.email ?? 'No disponible',
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.person,
+                      label: 'Nombre',
+                      value: _displayName ?? 'Sin nombre',
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.phone,
+                      label: 'Teléfono',
+                      value: _user!.phone ?? 'No configurado',
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.calendar_today,
+                      label: 'Miembro desde',
+                      value: _formatDate(_user!.createdAt),
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.verified_user,
+                      label: 'Estado del email',
+                      value: _user!.emailConfirmedAt != null ? 'Verificado' : 'No verificado',
+                      valueColor: _user!.emailConfirmedAt != null 
+                          ? Colors.green 
+                          : Colors.orange,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // === BOTÓN CERRAR SESIÓN ===
+            CustomButton(
+              text: 'Cerrar Sesión',
+              onPressed: () async {
+                if (await _confirmSignOut()) {
+                  await _authService.signOut();
+                }
+              },
+              bgColor: AppColors.rojo,
+              textColor: Colors.white,
+              leftIcon: const Icon(Icons.logout, color: Colors.white),
+            ),
+
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }

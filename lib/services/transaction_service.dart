@@ -9,7 +9,7 @@ class TransactionService {
   final CategoryService _categoryService = CategoryService();
 
   Future<int> createTransaction(Transaction transaction) async {
-    final userEmail = _authService.getCurrentUserEmail();
+    final userEmail = _authService.currentUserEmail; 
     if (userEmail == null) throw Exception('User not authenticated');
 
     final db = await _db.database;
