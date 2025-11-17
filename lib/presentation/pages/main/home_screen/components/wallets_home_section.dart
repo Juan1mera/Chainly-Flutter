@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/core/constants/fonts.dart';
+import 'package:wallet_app/core/utils/number_format.dart';
 import 'package:wallet_app/models/wallet_model.dart';
+import 'package:wallet_app/services/auth_service.dart';
 
 class WalletsHomeSection extends StatefulWidget {
   final List<Wallet> wallets;
@@ -20,6 +24,8 @@ class _WalletsHomeSectionState extends State<WalletsHomeSection>
   bool _isDragging = false;
   late AnimationController _animationController;
   late Animation<double> _moveAnimation;
+
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -200,9 +206,8 @@ class _WalletsHomeSectionState extends State<WalletsHomeSection>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(15),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
@@ -211,56 +216,94 @@ class _WalletsHomeSectionState extends State<WalletsHomeSection>
                 Text(
                   wallet.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.clashDisplay
                   ),
                 ),
                 Icon(
                   wallet.type == 'bank' ? Icons.account_balance : Icons.wallet,
-                  color: Colors.white,
-                  size: 30,
+                  color: AppColors.white,
+                  size: 25,
                 ),
               ],
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  wallet.type == 'bank' ? 'Cuenta Bancaria' : 'Efectivo',
+                  wallet.currency,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    color: AppColors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: AppFonts.clashDisplay
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                const SizedBox(width: 10,),
+                Text(
+                  formatAmount(wallet.balance),
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: AppFonts.clashDisplay
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      wallet.balance.toStringAsFixed(2),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
+                      'Owner',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontFamily: AppFonts.clashDisplay,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        wallet.currency,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
+                    Text(
+                      '${_authService.currentUserName}',
+                      style: TextStyle(
+                          color: AppColors.white,
+                          fontFamily: AppFonts.clashDisplay,
                           fontWeight: FontWeight.w500,
-                        ),
+                          fontSize: 12
                       ),
                     ),
                   ],
                 ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Created At',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontFamily: AppFonts.clashDisplay,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12
+                      ),
+                    ),
+                    Text(
+                      '${wallet.createdAt.month}/${wallet.createdAt.day}',
+                      style: TextStyle(
+                          color: AppColors.white,
+                          fontFamily: AppFonts.clashDisplay,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12
+                      ),
+                    ),
+                  ],
+                )
               ],
-            ),
+            )
           ],
         ),
       ),

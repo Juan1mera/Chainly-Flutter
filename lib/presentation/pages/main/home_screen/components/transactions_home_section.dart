@@ -135,7 +135,7 @@ class TransactionsHomeSection extends StatelessWidget {
                       transaction.transaction.note ?? ''
                     ),
                     Text(
-                      formatAmount(
+                      formatAmountTransaction(
                         transaction.transaction.amount,
                         isExpense: transaction.transaction.type == 'expense',
                       ),

@@ -34,6 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
             'Your Cards',
             style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w500),
           ),
+          Text(
+            'Cards information',
+            style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300),
+          ),
 
           FutureBuilder<List<Wallet>>(
             future: _walletService.getWallets(includeArchived: false),
@@ -53,10 +57,20 @@ class _HomeScreenState extends State<HomeScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Transactions',
-                style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w400),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Transactions',
+                    style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w400),
+                  ),
+                  Text(
+                    'Latest account activity',
+                    style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300),
+                  ),
+                ],
               ),
+
               Icon(Icons.arrow_outward_rounded, size: 35, color: AppColors.black),
             ],
           ),
