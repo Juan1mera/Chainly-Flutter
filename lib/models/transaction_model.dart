@@ -1,7 +1,7 @@
 class Transaction {
   final int? id;
   final int walletId;
-  final int categoryId; // ahora obligatorio
+  final int categoryId; 
   final String type;
   final double amount;
   final String? note;

@@ -1,12 +1,12 @@
 // lib/presentation/pages/main/home_screen/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/models/transaction_with_details.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/transactions_home_section.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/wallets_home_section.dart';
 import 'package:wallet_app/services/transaction_service.dart';
 import 'package:wallet_app/services/wallet_service.dart';
 import 'package:wallet_app/models/wallet_model.dart';
-import 'package:wallet_app/models/transaction_model.dart';
 import 'package:wallet_app/models/category_model.dart';
 import 'package:wallet_app/services/category_service.dart';
 
@@ -71,8 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
               }
               final categories = categorySnapshot.data ?? [];
 
-              return FutureBuilder<List<Transaction>>(
-                future: _transactionService.getAllTransactions(),
+              return FutureBuilder<List<TransactionWithDetails>>(
+                future: _transactionService.getAllTransactionsWithDetails(),
                 builder: (context, transactionSnapshot) {
                   if (transactionSnapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
