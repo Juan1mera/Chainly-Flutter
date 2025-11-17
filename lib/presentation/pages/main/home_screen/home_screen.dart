@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/models/category_model.dart';
 import 'package:wallet_app/models/transaction_model.dart';
 import 'package:wallet_app/models/wallet_model.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/header_home_section.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/transactions_home_section.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/wallets_home_section.dart';
+import 'package:wallet_app/services/category_service.dart';
 import 'package:wallet_app/services/transaction_service.dart';
 import 'package:wallet_app/services/wallet_service.dart';
 
@@ -76,25 +78,39 @@ class _HomeScreenState extends State<HomeScreen> {
             // Recent Transactions Section
 
             const SizedBox(height: 12),
-FutureBuilder<List<Transaction>>(
-  future: _transactionService.getAllTransactions(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (snapshot.hasError) {
-      return const Center(child: Text('Error al cargar transacciones'));
-    }
-    final transactions = snapshot.data ?? [];
-    return TransactionsHomeSection(
-      transactions: transactions,
-      onViewAllPressed: () {
-        // Navega a la pantalla de todas las transacciones
-        // Navigator.push(context, ...);
-      },
-    );
-  },
-),
+            // Dentro del FutureBuilder de transacciones
+            FutureBuilder<List<Category>>(
+              future: CategoryService().getCategories(), 
+              builder: (context, categorySnapshot) {
+                if (categorySnapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+                }
+
+                final categories = categorySnapshot.data ?? [];
+
+                return FutureBuilder<List<Transaction>>(
+                  future: _transactionService.getAllTransactions(),
+                  builder: (context, transactionSnapshot) {
+                    if (transactionSnapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+                    }
+                    if (transactionSnapshot.hasError) {
+                      return const Center(child: Text('Error al cargar transacciones'));
+                    }
+
+                    final transactions = transactionSnapshot.data ?? [];
+
+                    return TransactionsHomeSection(
+                      transactions: transactions,
+                      categories: categories,
+                      onViewAllPressed: () {
+                        // Tu navegación
+                      },
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
