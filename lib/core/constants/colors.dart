@@ -8,6 +8,17 @@ class AppColors {
   // Color secundario
   static const Color secundario = Color(0xFF232322);
 
+
+
+  static const Color white = Color(0xFFF2F2F2);
+  static const Color grey = Color(0xFFBDBDBD);
+  static const Color greyDark = Color.fromARGB(255, 70, 70, 70);
+  static const Color black = Color(0xFF0F0F0F);
+  static const Color blue = Color.fromARGB(255, 197, 216, 243);
+  static const Color green = Color.fromARGB(255, 209, 250, 215);
+  static const Color purple = Color.fromARGB(255, 194, 197, 244);
+  static const Color yellow = Color.fromARGB(255, 252, 236, 206);
+
   // Colores de fondo
   static const Color fondoPrincipal = Color(0xFFE9E3DC);
   static const Color fondoSecundario = Color(0xFF232322);

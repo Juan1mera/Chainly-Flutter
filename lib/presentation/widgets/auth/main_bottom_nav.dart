@@ -76,7 +76,7 @@ class _MainBottomNavState extends State<MainBottomNav> with TickerProviderStateM
         margin: const EdgeInsets.symmetric(vertical: 30, horizontal: 70),
         padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
         decoration: BoxDecoration(
-          color: AppColors.background4,
+          color: AppColors.black,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -97,8 +97,8 @@ class _MainBottomNavState extends State<MainBottomNav> with TickerProviderStateM
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.purple200
-                      : AppColors.background5,
+                      ? AppColors.purple
+                      : AppColors.greyDark,
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: AnimatedBuilder(
@@ -114,8 +114,8 @@ class _MainBottomNavState extends State<MainBottomNav> with TickerProviderStateM
                           Icon(
                             item.icon,
                             color: isSelected
-                                ? AppColors.background4
-                                : AppColors.background1,
+                                ? AppColors.black
+                                : AppColors.white,
                             size: 24,
                           ),
                           if (isSelected) ...[

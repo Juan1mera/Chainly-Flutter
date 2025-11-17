@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_app/models/transaction_model.dart';
 import 'package:wallet_app/models/wallet_model.dart';
+import 'package:wallet_app/presentation/pages/main/home_screen/components/wallets_section.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_header.dart';
 import 'package:wallet_app/services/transaction_service.dart';
 import 'package:wallet_app/services/wallet_service.dart';
@@ -33,52 +34,19 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            FutureBuilder<List<Wallet>>(
-              future: _walletService.getWallets(includeArchived: false),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Error al cargar carteras'));
-                }
-                final wallets = snapshot.data ?? [];
-                if (wallets.isEmpty) {
-                  return const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text(
-                        'No tienes carteras aún',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  );
-                }
-                return Column(
-                  children: wallets.map((wallet) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Color(int.parse(wallet.color.replaceFirst('#', '0xFF'))),
-                          child: Text(
-                            wallet.name.isNotEmpty ? wallet.name[0].toUpperCase() : '?',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(wallet.name),
-                        subtitle: Text('${wallet.type == 'bank' ? 'Banco' : 'Efectivo'} • ${wallet.currency}'),
-                        trailing: Text(
-                          '${wallet.balance.toStringAsFixed(2)} ${wallet.currency}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
+FutureBuilder<List<Wallet>>(
+  future: _walletService.getWallets(includeArchived: false),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      return const Center(child: Text('Error al cargar carteras'));
+    }
+    final wallets = snapshot.data ?? [];
+    return WalletsSection(wallets: wallets);
+  },
+),
 
             const SizedBox(height: 24),
 
