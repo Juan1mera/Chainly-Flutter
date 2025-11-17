@@ -1,4 +1,6 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wallet_app/core/constants/colors.dart';
 import 'package:wallet_app/presentation/widgets/auth/auth_gate.dart';
@@ -6,14 +8,17 @@ import 'package:wallet_app/presentation/widgets/auth/auth_gate.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar Supabase
   await Supabase.initialize(
     url: 'https://dpryofqwatjjupnrzoqz.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcnlvZnF3YXRqanVwbnJ6b3F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NTQ0MzksImV4cCI6MjA2MzUzMDQzOX0.BlX52M9OkBvpaXSIkFW2vTtI5R_Wm0qIJI36BTDpQqk',
   );
 
-  runApp(const MyApp());
+  runApp(
+    ProviderScope(                         
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -31,15 +36,14 @@ class MyApp extends StatelessWidget {
       home: const SupabaseGate(),
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        // Aplicamos el degradado como fondo global
         return Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.blue, // arriba
-                AppColors.yellow,    // abajo
+                AppColors.blue,
+                AppColors.yellow,
               ],
               stops: [0.0, 1.0],
             ),

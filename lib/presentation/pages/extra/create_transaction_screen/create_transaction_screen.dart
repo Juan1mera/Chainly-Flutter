@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wallet_app/core/constants/colors.dart';
 import 'package:wallet_app/models/category_model.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_number_field.dart';
@@ -6,8 +7,9 @@ import 'package:wallet_app/presentation/widgets/ui/custom_select.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_text_field.dart';
 import 'package:wallet_app/services/category_service.dart';
 import 'package:wallet_app/services/transaction_service.dart';
+import 'package:wallet_app/providers/wallet_provider.dart';
 
-class CreateTransactionScreen extends StatefulWidget {
+class CreateTransactionScreen extends ConsumerStatefulWidget {
   final int walletId;
   final String currency;
 
@@ -18,10 +20,10 @@ class CreateTransactionScreen extends StatefulWidget {
   });
 
   @override
-  State<CreateTransactionScreen> createState() => _CreateTransactionScreenState();
+  ConsumerState<CreateTransactionScreen> createState() => _CreateTransactionScreenState();
 }
 
-class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
+class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScreen> {
   final TransactionService _transactionService = TransactionService();
   final CategoryService _categoryService = CategoryService();
   final TextEditingController _noteController = TextEditingController();
@@ -77,7 +79,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transacción creada')),
         );
-        Navigator.pop(context, true); // true = éxito
+        ref.read(walletsProvider.notifier).refresh();
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -120,16 +123,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                     onChanged: (val) => setState(() => _amount = val),
                   ),
                   const SizedBox(height: 24),
-
-                  // Selector de categoría
                   _buildCategorySelector(),
                   const SizedBox(height: 24),
-
-                  // Tipo: Ingreso / Gasto
                   _buildTypeSelector(),
                   const SizedBox(height: 24),
-
-                  // Nota opcional
                   CustomTextField(
                     controller: _noteController,
                     label: 'Nota (opcional)',
@@ -180,7 +177,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               if (result != null && result.isNotEmpty) {
                 setState(() {
                   _selectedCategoryName = result;
-                  _categories.add(Category(name: result)); // optimista
+                  _categories.add(Category(name: result));
                 });
               }
             } else {

@@ -27,28 +27,51 @@ class TransactionService {
     return await db.insert('transactions', transaction.toMap());
   }
 
-  Future<int> createTransactionWithCategoryName({
-    required int walletId,
-    required String type,
-    required double amount,
-    required String categoryName,
-    String? note,
-  }) async {
-    final categoryId = await _categoryService.getOrCreateCategoryId(categoryName);
-    final now = DateTime.now();
+// ← Reemplaza SOLO este método en tu TransactionService
+Future<int> createTransactionWithCategoryName({
+  required int walletId,
+  required String type,
+  required double amount,
+  required String categoryName,
+  String? note,
+}) async {
+  final db = await _db.database;
 
-    final transaction = Transaction(
-      walletId: walletId,
-      categoryId: categoryId,
-      type: type,
-      amount: amount,
-      note: note,
-      date: now,
-      createdAt: now,
-    );
+  // 1. Aseguramos que la categoría exista
+  final categoryId = await _categoryService.getOrCreateCategoryId(categoryName);
 
-    return await createTransaction(transaction);
-  }
+  // 2. Creamos la transacción
+  final now = DateTime.now();
+  final transaction = Transaction(
+    walletId: walletId,
+    categoryId: categoryId,
+    type: type,
+    amount: amount,
+    note: note,
+    date: now,
+    createdAt: now,
+  );
+
+  // 3. Iniciar una transacción de base de datos para mantener consistencia
+  return await db.transaction((txn) async {
+    // Insertar la transacción
+    final transactionId = await txn.insert('transactions', transaction.toMap());
+
+    // 4. Actualizar el balance de la wallet
+    final updateQuery = '''
+      UPDATE wallets 
+      SET balance = balance + ? 
+      WHERE id = ?
+    ''';
+
+    // Si es ingreso → suma, si es gasto → resta
+    final balanceChange = type == 'income' ? amount : -amount;
+
+    await txn.rawUpdate(updateQuery, [balanceChange, walletId]);
+
+    return transactionId;
+  });
+}
 
   Future<List<Transaction>> getTransactionsByWallet(
     int walletId, {

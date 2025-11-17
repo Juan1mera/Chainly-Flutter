@@ -1,56 +1,43 @@
-// lib/presentation/pages/main/home_screen/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/models/category_model.dart';
 import 'package:wallet_app/models/transaction_with_details.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/transactions_home_section.dart';
 import 'package:wallet_app/presentation/pages/main/home_screen/components/wallets_home_section.dart';
+import 'package:wallet_app/providers/wallet_provider.dart';
 import 'package:wallet_app/services/transaction_service.dart';
-import 'package:wallet_app/services/wallet_service.dart';
-import 'package:wallet_app/models/wallet_model.dart';
-import 'package:wallet_app/models/category_model.dart';
 import 'package:wallet_app/services/category_service.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {  
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState(); 
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final WalletService _walletService = WalletService();
+class _HomeScreenState extends ConsumerState<HomeScreen> { 
   final TransactionService _transactionService = TransactionService();
 
   @override
   Widget build(BuildContext context) {
+    final walletsAsync = ref.watch(walletsProvider); 
+
     return RefreshIndicator(
-      onRefresh: () async => setState(() {}),
+      onRefresh: () async => ref.read(walletsProvider.notifier).loadWallets(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
         children: [
-          const SizedBox(height: 80), // Espacio para el header fijo
+          const SizedBox(height: 80),
 
-          const Text(
-            'Your Cards',
-            style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w500),
-          ),
-          Text(
-            'Cards information',
-            style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300),
-          ),
+          const Text('Your Cards', style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w500)),
+          const Text('Cards information', style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300)),
+          const SizedBox(height: 16),
 
-          FutureBuilder<List<Wallet>>(
-            future: _walletService.getWallets(includeArchived: false),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return const Center(child: Text('Error al cargar carteras'));
-              }
-              final wallets = snapshot.data ?? [];
-              return WalletsHomeSection(wallets: wallets);
-            },
+          walletsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Center(child: Text('Error: $err')),
+            data: (wallets) => WalletsHomeSection(wallets: wallets),
           ),
 
           const SizedBox(height: 24),
@@ -60,21 +47,13 @@ class _HomeScreenState extends State<HomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Transactions',
-                    style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w400),
-                  ),
-                  Text(
-                    'Latest account activity',
-                    style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300),
-                  ),
+                  Text('Transactions', style: TextStyle(fontSize: 30, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w400)),
+                  Text('Latest account activity', style: TextStyle(fontSize: 16, fontFamily: 'ClashDisplay', fontWeight: FontWeight.w300)),
                 ],
               ),
-
               Icon(Icons.arrow_outward_rounded, size: 35, color: AppColors.black),
             ],
           ),
-
           const SizedBox(height: 12),
 
           FutureBuilder<List<Category>>(
@@ -97,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final transactions = transactionSnapshot.data ?? [];
 
                   return TransactionsHomeSection(
-                    transactions: transactions,
+                    transactions: transactions.take(5).toList(), 
                     categories: categories,
                     onViewAllPressed: () {},
                   );
@@ -106,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
 
-          const SizedBox(height: 100), // Espacio inferior
+          const SizedBox(height: 100),
         ],
       ),
     );

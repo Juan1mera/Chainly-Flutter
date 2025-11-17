@@ -1,79 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/core/constants/fonts.dart';
+import 'package:wallet_app/core/utils/number_format.dart';
 import 'package:wallet_app/models/wallet_model.dart';
 
 class WalletCard extends StatelessWidget {
   final Wallet wallet;
+  final String? ownerName;
 
-  const WalletCard({super.key, required this.wallet});
+  const WalletCard({
+    super.key,
+    required this.wallet,
+    this.ownerName,
+  });
 
-  String _getCurrencySymbol(String currency) {
-    const Map<String, String> symbols = {
-      'USD': r'$',
-      'EUR': '€',
-      'GBP': '£',
-      'JPY': '¥',
-      'MXN': r'$',
-      'BRL': r'R$',
-      'INR': '₹',
-      'COP': 'COL',
-    };
-    return symbols[currency] ?? currency;
-  }
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = _getCurrencySymbol(wallet.currency);
     final walletColor = Color(int.parse(wallet.color.replaceFirst('#', '0xFF')));
+    final displayOwnerName = ownerName ?? 'You'; // fallback si no tienes el nombre
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
+      height: 190,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [walletColor, walletColor.withValues(alpha: 0.7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: walletColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: walletColor.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 6))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                child: Icon(wallet.iconBank ?? Icons.account_balance_wallet, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Nombre + Icono tipo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    wallet.name,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.clashDisplay,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  wallet.type == 'bank' ? Icons.account_balance : Icons.wallet,
+                  color: AppColors.white,
+                  size: 28,
+                ),
+              ],
+            ),
+
+            // Moneda + Monto grande
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  wallet.currency,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: AppFonts.clashDisplay,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  formatAmount(wallet.balance),
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 38,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: AppFonts.clashDisplay,
+                  ),
+                ),
+              ],
+            ),
+
+            // Owner + Created At
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Owner
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(wallet.name, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('${wallet.type == 'bank' ? 'Banco' : 'Efectivo'} • ${wallet.currency}',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
+                    const Text(
+                      'Owner',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: AppFonts.clashDisplay,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      displayOwnerName,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.clashDisplay,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              if (wallet.isFavorite) const Icon(Icons.star, color: Colors.amber, size: 24),
-            ],
-          ),
-          const SizedBox(height: 24),
-          const Text('Saldo actual', style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(currencySymbol, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(width: 4),
-              Text(wallet.balance.toStringAsFixed(2), style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ],
+
+                // Created At
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Created',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: AppFonts.clashDisplay,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${wallet.createdAt.month.toString().padLeft(2, '0')}/${wallet.createdAt.day.toString().padLeft(2, '0')}',
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.clashDisplay,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

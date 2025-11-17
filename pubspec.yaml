@@ -42,7 +42,7 @@ dependencies:
 
   table_calendar: ^3.0.9
   flutter_animate: ^4.5.0
-
+  flutter_riverpod: ^3.0.3
   # google_mobile_ads: ^6.0.0
 
   http: ^1.2.2
