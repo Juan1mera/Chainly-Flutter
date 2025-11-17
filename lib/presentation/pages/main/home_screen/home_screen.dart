@@ -30,23 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Wallets Section
             const Text(
-              'Mis Carteras',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Your Cards',
+              style: TextStyle(
+                fontSize: 20, 
+                fontFamily: 'ClashDisplay',
+                fontWeight: FontWeight.w500
+              ),
             ),
             const SizedBox(height: 12),
-FutureBuilder<List<Wallet>>(
-  future: _walletService.getWallets(includeArchived: false),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (snapshot.hasError) {
-      return const Center(child: Text('Error al cargar carteras'));
-    }
-    final wallets = snapshot.data ?? [];
-    return WalletsSection(wallets: wallets);
-  },
-),
+            FutureBuilder<List<Wallet>>(
+              future: _walletService.getWallets(includeArchived: false),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error al cargar carteras'));
+                }
+                final wallets = snapshot.data ?? [];
+                return WalletsSection(wallets: wallets);
+              },
+            ),
 
             const SizedBox(height: 24),
 

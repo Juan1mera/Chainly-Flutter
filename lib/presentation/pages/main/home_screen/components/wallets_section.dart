@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_app/models/wallet_model.dart';
-import 'dart:math' as math;
 
 class WalletsSection extends StatefulWidget {
   final List<Wallet> wallets;
