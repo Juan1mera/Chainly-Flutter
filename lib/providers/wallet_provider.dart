@@ -14,29 +14,27 @@ class WalletsNotifier extends StateNotifier<AsyncValue<List<Wallet>>> {
   final WalletService _walletService;
 
   WalletsNotifier(this._walletService) : super(const AsyncValue.loading()) {
-    loadWallets(); // Carga inicial
+    loadWallets();
   }
 
-  /// Carga (o recarga) todas las carteras
   Future<void> loadWallets({bool includeArchived = true}) async {
     state = const AsyncValue.loading();
     try {
       final wallets = await _walletService.getWallets(includeArchived: includeArchived);
-      // Ordenar: favoritas primero
-      wallets.sort((a, b) => b.isFavorite == a.isFavorite ? 0 : b.isFavorite ? -1 : 1);
+
+      wallets.sort((a, b) {
+        if (a.isFavorite && !b.isFavorite) return -1;  // a antes que b
+        if (!a.isFavorite && b.isFavorite) return 1;   // b antes que a
+
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
       state = AsyncValue.data(wallets);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  /// Método público para refrescar después de crear/editar/borrar una cartera o transacción
-  Future<void> refresh() async {
-    await loadWallets(includeArchived: true);
-  }
-
-  /// Alias específico para cuando se crea una transacción (más semántico)
-  Future<void> refreshAfterTransaction() async {
-    await refresh();
-  }
+  Future<void> refresh() async => loadWallets(includeArchived: true);
+  Future<void> refreshAfterTransaction() async => refresh();
 }
