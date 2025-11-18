@@ -4,25 +4,25 @@ import 'package:wallet_app/core/constants/colors.dart';
 import 'package:wallet_app/models/wallet_model.dart';
 import 'package:wallet_app/models/transaction_model.dart';
 import 'package:wallet_app/models/category_model.dart';
-import 'package:wallet_app/presentation/pages/extra/create_transaction_screen/create_transaction_screen.dart';
-import 'package:wallet_app/presentation/pages/extra/wallet_screen/components/transaction_list.dart';
-import 'package:wallet_app/presentation/pages/extra/wallet_screen/components/transaction_tabs.dart';
-import 'package:wallet_app/presentation/pages/extra/wallet_screen/components/wallet_card.dart';
+import 'package:wallet_app/presentation/pages/data/transactions/create_transaction_screen/create_transaction_screen.dart';
+import 'package:wallet_app/presentation/pages/data/wallets/view_wallet_screen/components/transaction_list.dart';
+import 'package:wallet_app/presentation/pages/data/wallets/view_wallet_screen/components/transaction_tabs.dart';
+import 'package:wallet_app/presentation/pages/data/wallets/view_wallet_screen/components/wallet_card.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_header.dart';
 import 'package:wallet_app/services/category_service.dart';
 import 'package:wallet_app/services/transaction_service.dart';
 import 'package:wallet_app/services/wallet_service.dart';
 
-class WalletScreen extends StatefulWidget {
+class ViewWalletScreen extends StatefulWidget {
   final int walletId;
 
-  const WalletScreen({super.key, required this.walletId});
+  const ViewWalletScreen({super.key, required this.walletId});
 
   @override
-  State<WalletScreen> createState() => _WalletScreenState();
+  State<ViewWalletScreen> createState() => _ViewWalletScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderStateMixin {
+class _ViewWalletScreenState extends State<ViewWalletScreen> with SingleTickerProviderStateMixin {
   final WalletService _walletService = WalletService();
   final TransactionService _transactionService = TransactionService();
   final CategoryService _categoryService = CategoryService();
@@ -103,13 +103,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomHeader(
-        title: 'Detalle de Cartera',
-        actions: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-        ],
-      ),
+      appBar: CustomHeader(),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.purple,
         onPressed: _goToCreateTransaction, // NAVEGA A LA NUEVA PANTALLA

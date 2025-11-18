@@ -4,8 +4,8 @@ import 'package:wallet_app/core/constants/colors.dart';
 import 'package:wallet_app/core/constants/currencies.dart';
 import 'package:wallet_app/core/constants/fonts.dart';
 import 'package:wallet_app/models/wallet_model.dart';
-import 'package:wallet_app/presentation/pages/extra/wallet_screen/components/wallet_card.dart';
-import 'package:wallet_app/presentation/pages/extra/wallet_screen/wallet_screen.dart';
+import 'package:wallet_app/presentation/pages/data/wallets/view_wallet_screen/components/wallet_card.dart';
+import 'package:wallet_app/presentation/pages/data/wallets/view_wallet_screen/view_wallet_screen.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_button.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_modal.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_text_field.dart';
@@ -234,7 +234,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: GestureDetector(
-                      onTap: wallet.isArchived ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => WalletScreen(walletId: wallet.id!))),
+                      onTap: wallet.isArchived ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewWalletScreen(walletId: wallet.id!))),
                       child: WalletCard(wallet: wallet),
                     ),
                   ),

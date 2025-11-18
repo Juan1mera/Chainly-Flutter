@@ -1,69 +1,148 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wallet_app/core/constants/colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wallet_app/presentation/pages/main/profile_screen/profile_screen.dart';
 
 class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback? onPress;
-  final IconData? iconOnPress; // IconData or null for default
+  final VoidCallback? onMenuPress;
+  final VoidCallback? onNotificationPress;
+  final int notificationCount;
 
   const CustomHeader({
     super.key,
-    required this.title,
-    this.onPress,
-    this.iconOnPress, required List<IconButton> actions,
+    this.onMenuPress,
+    this.onNotificationPress,
+    this.notificationCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    // final double statusBarHeight = MediaQuery.of(context).padding.top;
-    
-    return Container(
+    // Obtener avatar del usuario actual
+    final user = Supabase.instance.client.auth.currentUser;
+
+    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
+    final userInitial = (user?.email?[0] ?? 'U').toUpperCase();
+
+    return SizedBox(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.black,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
       child: SafeArea(
         child: Container(
-          height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // === BOTÓN DE ATRÁS (IZQUIERDA) ===
               IconButton(
-                icon: Icon(
-                  iconOnPress ?? Icons.info_outline, // Usar directamente el IconData
-                  size: 30,
-                  color: AppColors.white,
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 28,
+                  color: AppColors.black,
                 ),
-                onPressed: onPress,
+                onPressed: () => Navigator.of(context).pop(), // <-- VUELVE ATRÁS
               ),
-              if (title.isNotEmpty)
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Chillax',
-                    color: AppColors.white,
-                    textBaseline: TextBaseline.alphabetic,
-                  ),
-                  textAlign: TextAlign.center,
+
+              // === NOTIFICACIONES Y PERFIL CON STACK (DERECHA) ===
+              SizedBox(
+                width: 90,
+                height: 55,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      child: GestureDetector(
+                        onTap: onNotificationPress,
+                        child: Container(
+                          width: 55,
+                          height: 55,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Icon(
+                                  Icons.notifications_rounded,
+                                  color: AppColors.black,
+                                  size: 24,
+                                ),
+                              ),
+                              // Badge de contador
+                              if (notificationCount > 0)
+                                Positioned(
+                                  top: 6,
+                                  right: 6,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 18,
+                                      minHeight: 18,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        notificationCount > 9
+                                            ? '9+'
+                                            : '$notificationCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Foto de perfil (ADELANTE - DERECHA)
+                    Positioned(
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 55,
+                          height: 55,
+                          decoration: BoxDecoration(shape: BoxShape.circle),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: AppColors.white,
+                            backgroundImage:
+                                avatarUrl != null && avatarUrl.isNotEmpty
+                                ? NetworkImage(avatarUrl)
+                                : null,
+                            child: avatarUrl == null || avatarUrl.isEmpty
+                                ? Text(
+                                    userInitial,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              SvgPicture.asset(
-                'assets/Icon.svg',
-                height: 50,
-                width: 50,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.white,
-                  BlendMode.srcIn,
-                ),
-                placeholderBuilder: (context) => const CircularProgressIndicator(),
               ),
             ],
           ),
@@ -74,6 +153,6 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize {
-    return const Size.fromHeight(104);
+    return const Size.fromHeight(70);
   }
 }

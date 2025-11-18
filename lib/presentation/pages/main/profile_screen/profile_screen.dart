@@ -297,14 +297,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: CustomHeader(
-        title: 'Mi Perfil',
-        onPress: () async {
-          if (await _confirmSignOut()) {
-            await _authService.signOut();
-          }
-        },
-        iconOnPress: Icons.logout,
-        actions: const [],
+
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
