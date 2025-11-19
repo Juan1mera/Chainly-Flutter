@@ -155,28 +155,30 @@ class TransactionService {
     DateTime? to,
   }) async {
     final db = await _db.database;
-    final whereParts = ['wallet_id = ?'];
-    final whereArgs = [walletId];
+    final whereParts = <String>['wallet_id = ?'];
+    final whereArgs = <Object?>[walletId];
 
     if (type != null) {
       whereParts.add('type = ?');
-      whereArgs.add(type as int);
+      whereArgs.add(type);
     }
     if (from != null) {
       whereParts.add('date >= ?');
-      whereArgs.add(from.toIso8601String() as int);
+      whereArgs.add(from.millisecondsSinceEpoch);  
     }
     if (to != null) {
+      final endOfDay = DateTime(to.year, to.month, to.day, 23, 59, 59, 999);
       whereParts.add('date <= ?');
-      whereArgs.add(to.toIso8601String() as int);
+      whereArgs.add(endOfDay.millisecondsSinceEpoch);  
     }
 
     final maps = await db.query(
       'transactions',
-      where: whereParts.join(' AND '),
-      whereArgs: whereArgs,
+      where: whereParts.isNotEmpty ? whereParts.join(' AND ') : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
       orderBy: 'date DESC',
     );
+
     return maps.map(Transaction.fromMap).toList();
   }
 
