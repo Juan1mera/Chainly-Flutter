@@ -87,9 +87,9 @@ class _WalletsHomeSectionState extends State<WalletsHomeSection>
 
   double _getCardRotation(int index) {
     // Inclinación alternada para cada tarjeta
-    if (index == 0) return -0.02;
-    if (index == 1) return 0.02;
-    return -0.015;
+    if (index == 0) return -0.04;
+    if (index == 1) return 0.04;
+    return -0.020;
   }
 
   @override

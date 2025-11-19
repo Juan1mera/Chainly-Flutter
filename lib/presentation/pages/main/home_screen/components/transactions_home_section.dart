@@ -48,13 +48,13 @@ class TransactionsHomeSection extends StatelessWidget {
           final category = _getCategoryById(transaction.transaction.categoryId) ?? 
               Category(name: transaction.transaction.type == 'expense' ? 'Gasto' : 'Ingreso');
 
-          final rotation = (index % 2 == 0) ? -0.02 : 0.02;
+          final rotation = (index % 2 == 0) ? -0.08 : 0.08;
 
           return Transform.rotate(
             angle: rotation,
             child: Container(
               margin: EdgeInsets.only(
-                left: index == 0 ? 0 : 8,
+                left: index == 0 ? 0 : 0,
                 right: 16,
                 top: 8,
                 bottom: 8,
@@ -132,7 +132,9 @@ class TransactionsHomeSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      transaction.transaction.note ?? ''
+                      transaction.transaction.note ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis
                     ),
                     Text(
                       formatAmountTransaction(
