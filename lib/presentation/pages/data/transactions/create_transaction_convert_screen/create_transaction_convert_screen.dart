@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:wallet_app/core/constants/colors.dart';
+import 'package:wallet_app/core/constants/fonts.dart';
+import 'package:wallet_app/core/utils/number_format.dart';
 import 'package:wallet_app/models/wallet_model.dart';
-import 'package:wallet_app/presentation/widgets/common/wallet_card.dart';
+import 'package:wallet_app/presentation/widgets/common/wallet_mini_card.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_button.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_header.dart';
 import 'package:wallet_app/presentation/widgets/ui/custom_number_field.dart';
@@ -14,10 +17,7 @@ import 'package:wallet_app/services/transaction_service.dart';
 class CreateTransactionConvertScreen extends ConsumerStatefulWidget {
   final Wallet? initialFromWallet;
 
-  const CreateTransactionConvertScreen({
-    super.key,
-    this.initialFromWallet,
-  });
+  const CreateTransactionConvertScreen({super.key, this.initialFromWallet});
 
   @override
   ConsumerState<CreateTransactionConvertScreen> createState() =>
@@ -80,8 +80,8 @@ class _CreateTransactionConvertScreenState
           const SnackBar(content: Text('Transferencia realizada con éxito')),
         );
         ref.read(walletsProvider.notifier).refreshAfterTransaction();
-        
-        Navigator.pop(context, true); 
+
+        Navigator.pop(context, true);
       }
     } finally {
       setState(() => _isConverting = false);
@@ -96,15 +96,15 @@ class _CreateTransactionConvertScreenState
       return;
     }
     if (_amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto válido')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresa un monto válido')));
       return;
     }
     if (_fromWallet!.balance < _amount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saldo insuficiente')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Saldo insuficiente')));
       return;
     }
 
@@ -127,9 +127,9 @@ class _CreateTransactionConvertScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -153,7 +153,9 @@ class _CreateTransactionConvertScreenState
 
           if (activeWallets.length < 2) {
             return const Center(
-              child: Text('Necesitas al menos 2 billeteras activas para transferir'),
+              child: Text(
+                'Necesitas al menos 2 billeteras activas para transferir',
+              ),
             );
           }
 
@@ -181,16 +183,13 @@ class _CreateTransactionConvertScreenState
               child: Column(
                 children: [
                   const CustomHeader(),
-              
-                  const SizedBox(height: 20),
-              
+
                   // Desde
                   CustomSelect<Wallet>(
                     label: "Desde",
                     items: activeWallets,
                     selectedItem: _fromWallet,
-                    getDisplayText: (w) =>
-                        '${w.name} • ${w.currency} • ${w.balance.toStringAsFixed(2)}',
+                    getDisplayText: (w) => '${w.name} • ${w.currency}',
                     onChanged: (wallet) {
                       setState(() {
                         _fromWallet = wallet;
@@ -199,13 +198,13 @@ class _CreateTransactionConvertScreenState
                       });
                     },
                   ),
-              
+
                   const SizedBox(height: 20),
                   if (_fromWallet != null) ...[
-                    WalletCard(wallet: _fromWallet!),
+                    WalletMiniCard(wallet: _fromWallet!),
                     const SizedBox(height: 20),
                   ],
-              
+
                   CustomNumberField(
                     currency: _fromWallet?.currency ?? 'USD',
                     hintText: '0.00',
@@ -214,15 +213,21 @@ class _CreateTransactionConvertScreenState
                       _convertAndShow();
                     },
                   ),
-              
-                  const SizedBox(height: 30),
-                  Icon(Icons.swap_vert, size: 48, color: AppColors.purple),
-                  const SizedBox(height: 30),
-              
+
+                  const SizedBox(height: 10),
+                  Icon(
+                    Bootstrap.arrow_down_up,
+                    size: 28,
+                    color: AppColors.black,
+                  ),
+                  const SizedBox(height: 10),
+
                   // Hacia
                   CustomSelect<Wallet>(
                     label: "Hacia",
-                    items: activeWallets.where((w) => w.id != _fromWallet?.id).toList(),
+                    items: activeWallets
+                        .where((w) => w.id != _fromWallet?.id)
+                        .toList(),
                     selectedItem: _toWallet,
                     getDisplayText: (w) => '${w.name} • ${w.currency}',
                     onChanged: (wallet) {
@@ -232,22 +237,23 @@ class _CreateTransactionConvertScreenState
                       });
                     },
                   ),
-              
+
                   const SizedBox(height: 20),
                   if (_toWallet != null) ...[
-                    WalletCard(wallet: _toWallet!),
+                    WalletMiniCard(wallet: _toWallet!),
                     const SizedBox(height: 20),
                   ],
-              
+
                   // Resultado de conversión
-                  if (_fromWallet != null && _toWallet != null && _amount > 0) ...[
+                  if (_fromWallet != null &&
+                      _toWallet != null &&
+                      _amount > 0) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (_isConverting)
@@ -258,13 +264,23 @@ class _CreateTransactionConvertScreenState
                             )
                           else ...[
                             Text(
-                              '${_amount.toStringAsFixed(2)} ${_fromWallet!.currency}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              '${formatAmount(_amount)} ${_fromWallet!.currency}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: AppFonts.clashDisplay
+                              ),
                             ),
-                            const Icon(Icons.arrow_forward, size: 20),
+                            const SizedBox(height: 10,),
+                            const Icon(Bootstrap.arrow_down_up, size: 20),
+                            const SizedBox(height: 10,),
                             Text(
-                              '${_convertedAmount.toStringAsFixed(2)} ${_toWallet!.currency}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              '${formatAmount(_convertedAmount)} ${_toWallet!.currency}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: AppFonts.clashDisplay
+                              ),
                             ),
                           ],
                         ],
@@ -272,25 +288,26 @@ class _CreateTransactionConvertScreenState
                     ),
                     const SizedBox(height: 20),
                   ],
-              
+
                   CustomTextField(
                     controller: _noteController,
                     label: "Nota (opcional)",
                     hintText: "Ej: Pago a amigo, viaje...",
                   ),
-              
+
                   const SizedBox(height: 30),
-              
+
                   CustomButton(
                     text: "Transferir",
-                    onPressed: (_fromWallet == null ||
+                    onPressed:
+                        (_fromWallet == null ||
                             _toWallet == null ||
                             _amount <= 0 ||
                             _isConverting)
                         ? null
                         : _makeTransfer,
                   ),
-              
+
                   const SizedBox(height: 40),
                 ],
               ),
