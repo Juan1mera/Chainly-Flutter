@@ -49,7 +49,7 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             onTap: isLoading ? null : onPressed,
             child: Container(
-              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 48),
               padding: EdgeInsets.symmetric(
                 horizontal: hasIcons ? 6 : 20,
                 vertical: hasIcons ? 6 : 12,

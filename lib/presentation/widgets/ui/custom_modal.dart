@@ -19,12 +19,13 @@ class CustomModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * heightFactor,
+      // Ya no forzamos altura fija, dejamos que se adapte
       decoration: const BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // ← CLAVE: evita que ocupe toda la pantalla innecesariamente
         children: [
           // Handle bar
           Container(
@@ -32,63 +33,93 @@ class CustomModal extends StatelessWidget {
             width: 40,
             height: 5,
             decoration: BoxDecoration(
+              color: Colors.grey.shade400,
               borderRadius: BorderRadius.circular(2.5),
             ),
           ),
           const SizedBox(height: 16),
+
           // Title
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.black,
-              fontFamily: AppFonts.clashDisplay
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+                fontFamily: AppFonts.clashDisplay,
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          // Content
-          Expanded(child: child),
-          // Actions
+
+          // Contenido (flexible y scrollable)
+          Flexible(
+            child: child,
+          ),
+
+          // Actions (siempre visibles al final)
           if (actions != null)
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              decoration: const BoxDecoration(
                 color: AppColors.white,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 20,
-                children: 
-                actions!,
+                children: actions!.map((button) {
+                  return Expanded(
+                    child: Padding(
+                      padding: actions!.length > 1
+                          ? EdgeInsets.only(
+                              left: actions!.indexOf(button) == 0 ? 0 : 8,
+                              right: actions!.indexOf(button) == actions!.length - 1 ? 0 : 8,
+                            )
+                          : EdgeInsets.zero,
+                      child: button,
+                    ),
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 50,)
+
+          // Espacio seguro para el botón home (iPhone) y evitar que el teclado tape
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 20 : 30),
         ],
       ),
     );
   }
 }
 
-// Función helper para mostrar el modal
+// ====================================================
+// FUNCIÓN MEJORADA PARA MOSTRAR EL MODAL
+// ====================================================
 void showCustomModal({
   required BuildContext context,
   required String title,
   List<Widget>? actions,
-  double heightFactor = 0.7,
+  double heightFactor = 0.85, // un poco más alto por defecto
   required Widget child,
+  bool isScrollControlled = true,        // ← ahora puedes controlarlo
+  bool resizeToAvoidBottomInset = true,  // ← clave para que no tape el teclado
 }) {
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
+    isScrollControlled: isScrollControlled,
     backgroundColor: Colors.transparent,
+    useSafeArea: true, // ← recomendado: respeta notch y barra home
+    enableDrag: true,
+    showDragHandle: false, // ya tienes tu propia barra
+    // Esto es lo MÁS IMPORTANTE:
+    // Permite que el modal se eleve cuando aparece el teclado
     builder: (context) {
-      final mediaQuery = MediaQuery.of(context);
-      return SizedBox(
-        width: mediaQuery.size.width,
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom, // ← sube con el teclado
+        ),
         child: CustomModal(
           title: title,
           actions: actions,

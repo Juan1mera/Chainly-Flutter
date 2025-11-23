@@ -35,24 +35,31 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
     super.dispose();
   }
 
-  Future<void> _showCreateWalletModal() async {
-    _nameController.clear();
-    _selectedCurrency = 'USD';
-    _initialBalance = 0.0;
-    _selectedType = 'cash';
-    _selectedColor = AppColors.walletColors[0];
-    _isFavorite = false;
+Future<void> _showCreateWalletModal() async {
+  _nameController.clear();
+  _selectedCurrency = 'USD';
+  _initialBalance = 0.0;
+  _selectedType = 'cash';
+  _selectedColor = AppColors.walletColors[0];
+  _isFavorite = false;
 
-    showCustomModal(
-      context: context,
-      title: 'Add Wallet',
-      heightFactor: 0.9,
-      child: StatefulBuilder(
-        builder: (context, setModalState) {
-          return SingleChildScrollView(
+  showCustomModal(
+    context: context,
+    title: 'Add Wallet',
+    heightFactor: 0.9,
+    isScrollControlled: true,        
+    resizeToAvoidBottomInset: true,  
+    child: StatefulBuilder(
+      builder: (context, setModalState) {
+        return GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, 
               children: [
                 CustomTextField(
                   controller: _nameController,
@@ -65,39 +72,37 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                   items: Currencies.codes,
                   selectedItem: _selectedCurrency,
                   getDisplayText: (code) => code,
-                  onChanged: (val) =>
-                      setModalState(() => _selectedCurrency = val!),
+                  onChanged: (val) => setModalState(() => _selectedCurrency = val!),
                   dynamicIcon: (code) => Currencies.getIcon(code!),
                 ),
                 const SizedBox(height: 20),
                 CustomNumberField(
                   currency: _selectedCurrency,
                   hintText: '0.00',
-                  onChanged: (value) =>
-                      setModalState(() => _initialBalance = value),
+                  onChanged: (value) => setModalState(() => _initialBalance = value),
                 ),
                 const SizedBox(height: 24),
                 _buildTypeSelector(setModalState),
                 const SizedBox(height: 28),
                 _buildColorSelector(setModalState),
+
+                const SizedBox(height: 20),
               ],
             ),
-          );
-        },
+          ),
+        );
+      },
+    ),
+    actions: [
+      CustomButton(text: 'Cancel', onPressed: () => Navigator.pop(context)),
+      CustomButton(
+        text: 'Create',
+        onPressed: _isLoading ? null : _createWallet,
+        isLoading: _isLoading,
       ),
-      actions: [
-        CustomButton(
-          text: 'Cancell',
-          onPressed: () => Navigator.pop(context),
-        ),
-        CustomButton(
-          text: 'Create',
-          onPressed: _isLoading ? null : _createWallet,
-          isLoading: _isLoading,
-        ),
-      ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildTypeSelector(StateSetter s) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -246,7 +251,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                         ),
                         const SizedBox(height: 24),
                         const Text(
-                          'No tienes carteras aún',
+                          "You don't have wallets yet",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
@@ -254,7 +259,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Toca el botón + para crear tu primera cartera',
+                          'Tap the + button to create your first wallet',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
