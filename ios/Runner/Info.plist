@@ -2,26 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-    <!-- Permisos para la galería de fotos -->
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Esta app necesita acceso a la galería para seleccionar una foto de perfil</string>
-    
-    <!-- Permisos para la cámara (por si quieres agregarla después) -->
-    <key>NSCameraUsageDescription</key>
-    <string>Esta app necesita acceso a la cámara para tomar fotos de perfil</string>
-    
-    <!-- Para iOS 14+ - Permiso de acceso limitado a fotos -->
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Esta app necesita acceso a la galería para guardar y seleccionar fotos de perfil</string>
-
-
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Wallet App</string>
+	<string>Chainly</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -40,12 +26,20 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Esta app necesita acceso a la cámara para tomar fotos de perfil</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Esta app necesita acceso a la galería para guardar y seleccionar fotos de perfil</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta app necesita acceso a la galería para seleccionar una foto de perfil</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDarkContent</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Wallet App',
+      title: 'Chainly',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.purple),
         useMaterial3: true,
