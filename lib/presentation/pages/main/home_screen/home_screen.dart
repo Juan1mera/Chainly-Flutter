@@ -64,7 +64,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     'Transactions',
                     style: TextStyle(
                       fontSize: 30,
-                      fontFamily: 'ClashDisplay',
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -72,7 +71,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     'Latest account activity',
                     style: TextStyle(
                       fontSize: 16,
-                      fontFamily: 'ClashDisplay',
                       fontWeight: FontWeight.w300,
                     ),
                   ),

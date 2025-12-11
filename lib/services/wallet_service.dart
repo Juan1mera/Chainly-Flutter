@@ -14,6 +14,18 @@ class WalletService {
     return await db.insert('wallets', wallet.toMap());
   }
 
+  Future<Wallet?> getWalletById(int id) async {
+    final db = await _db.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'wallets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isEmpty) return null;
+    return Wallet.fromMap(maps.first);
+  }  
+
   Future<List<Wallet>> getWallets({
     bool onlyFavorites = false,
     bool includeArchived = false,
