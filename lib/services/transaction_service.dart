@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chainly/core/database/env.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:chainly/core/database/db.dart';
@@ -135,7 +136,7 @@ class TransactionService {
     final to = toCurrency.toUpperCase();
 
     try {
-      final response = await http.get(Uri.parse('https://api.exchangerate-api.com/v4/latest/$from'));
+      final response = await http.get(Uri.parse('${Env.exchangeApi}$from'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final rate = (data['rates'][to] as num?)?.toDouble() ?? 1.0;
