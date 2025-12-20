@@ -3,20 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
 import 'package:chainly/core/utils/number_format.dart';
-import 'package:chainly/models/category_model.dart'; 
+import 'package:chainly/models/category_model.dart';
 import 'dart:ui';
 
 import 'package:chainly/models/transaction_with_details.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TransactionsHomeSection extends StatelessWidget {
   final List<TransactionWithDetails> transactions;
-  final List<Category> categories; 
+  final List<Category> categories;
   final VoidCallback? onViewAllPressed;
+
+  User? get _user => Supabase.instance.client.auth.currentUser;
+
 
   const TransactionsHomeSection({
     super.key,
     required this.transactions,
-    required this.categories, 
+    required this.categories,
     this.onViewAllPressed,
   });
 
@@ -38,15 +42,23 @@ class TransactionsHomeSection extends StatelessWidget {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: displayTransactions.length + (displayTransactions.isNotEmpty ? 1 : 0),
+        itemCount:
+            displayTransactions.length +
+            (displayTransactions.isNotEmpty ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == displayTransactions.length) {
             return _buildViewAllCard();
           }
 
           final transaction = displayTransactions[index];
-          final category = _getCategoryById(transaction.transaction.categoryId) ?? 
-              Category(name: transaction.transaction.type == 'expense' ? 'Gasto' : 'Ingreso');
+          final category =
+              _getCategoryById(transaction.transaction.categoryId) ??
+              Category(
+                name: transaction.transaction.type == 'expense'
+                    ? 'Gasto'
+                    : 'Ingreso',
+                userId: '${_user?.id}'
+              ); 
 
           final rotation = (index % 2 == 0) ? -0.08 : 0.08;
 
@@ -67,7 +79,10 @@ class TransactionsHomeSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionCard(TransactionWithDetails transaction, Category category) {
+  Widget _buildTransactionCard(
+    TransactionWithDetails transaction,
+    Category category,
+  ) {
     final bool isExpense = transaction.transaction.type == 'expense';
 
     IconData getIcon() {
@@ -84,9 +99,7 @@ class TransactionsHomeSection extends StatelessWidget {
 
     return Container(
       width: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
@@ -111,11 +124,7 @@ class TransactionsHomeSection extends StatelessWidget {
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        getIcon(),
-                        color: AppColors.black,
-                        size: 24,
-                      ),
+                      child: Icon(getIcon(), color: AppColors.black, size: 24),
                     ),
                     Text(
                       transaction.wallet.currency,
@@ -135,7 +144,7 @@ class TransactionsHomeSection extends StatelessWidget {
                     Text(
                       transaction.transaction.note ?? '',
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       formatAmountTransaction(
@@ -145,7 +154,7 @@ class TransactionsHomeSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w400,
-                        fontFamily: AppFonts.clashDisplay
+                        fontFamily: AppFonts.clashDisplay,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -191,11 +200,22 @@ class TransactionsHomeSection extends StatelessWidget {
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.arrow_forward, color: AppColors.black, size: 30),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            color: AppColors.black,
+                            size: 30,
+                          ),
                         ),
                         SizedBox(height: 16),
-                        Text('See All', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: AppFonts.clashDisplay, color: AppColors.black)),
-
+                        Text(
+                          'See All',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.clashDisplay,
+                            color: AppColors.black,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -207,6 +227,4 @@ class TransactionsHomeSection extends StatelessWidget {
       ),
     );
   }
-
-
 }

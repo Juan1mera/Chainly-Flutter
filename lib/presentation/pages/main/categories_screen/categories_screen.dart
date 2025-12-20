@@ -7,6 +7,7 @@ import 'package:chainly/presentation/pages/main/categories_screen/components/cat
 import 'package:chainly/presentation/pages/main/categories_screen/components/category_edit_dialog.dart';
 import 'package:chainly/presentation/widgets/ui/custom_button.dart';
 import 'package:chainly/services/category_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -18,6 +19,9 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   final CategoryService _categoryService = CategoryService();
   late Future<List<Category>> _categoriesFuture;
+
+  User? get _user => Supabase.instance.client.auth.currentUser;
+
 
   @override
   void initState() {
@@ -54,14 +58,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         await _categoryService.updateCategory(Category(
           id: category.id,
           name: name,
-          icon: iconCode, // ← CORREGIDO: era "finalCode"
+          icon: iconCode, 
           monthlyBudget: category.monthlyBudget,
+          userId: '${_user?.id}'
         ));
       } else {
         await _categoryService.createCategory(Category(
           name: name,
-          icon: iconCode, // ← CORREGIDO
+          icon: iconCode, 
           monthlyBudget: 0.0,
+          userId: '${_user?.id}'
         ));
       }
 

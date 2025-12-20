@@ -13,6 +13,7 @@ import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/providers/wallet_provider.dart';
 import 'package:chainly/services/category_service.dart';
 import 'package:chainly/services/transaction_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateTransactionScreen extends ConsumerStatefulWidget {
   final int? initialWalletId;
@@ -25,13 +26,16 @@ class CreateTransactionScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CreateTransactionScreen> createState() => _CreateTransactionScreenState();
+  ConsumerState<CreateTransactionScreen> createState() =>
+      _CreateTransactionScreenState();
 }
 
-class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScreen> {
+class _CreateTransactionScreenState
+    extends ConsumerState<CreateTransactionScreen> {
   final TransactionService _transactionService = TransactionService();
   final CategoryService _categoryService = CategoryService();
   final TextEditingController _noteController = TextEditingController();
+  User? get _user => Supabase.instance.client.auth.currentUser;
 
   List<Category> _categories = [];
   String _type = 'expense';
@@ -90,20 +94,21 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
 
   Future<void> _createTransaction() async {
     if (_amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto válido')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresa un monto válido')));
       return;
     }
 
     if (_selectedWallet == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona una billetera')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Selecciona una billetera')));
       return;
     }
 
-    if (_selectedCategoryName == null || _selectedCategoryName!.trim().isEmpty) {
+    if (_selectedCategoryName == null ||
+        _selectedCategoryName!.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecciona o crea una categoría')),
       );
@@ -116,21 +121,23 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
         type: _type,
         amount: _amount,
         categoryName: _selectedCategoryName!.trim(),
-        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transacción creada')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Transacción creada')));
         ref.read(walletsProvider.notifier).refreshAfterTransaction();
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -193,8 +200,10 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
                         CustomSelect<Wallet>(
                           items: availableWallets,
                           selectedItem: _selectedWallet,
-                          getDisplayText: (wallet) => '${wallet.name} • ${wallet.currency}',
-                          onChanged: (wallet) => setState(() => _selectedWallet = wallet),
+                          getDisplayText: (wallet) =>
+                              '${wallet.name} • ${wallet.currency}',
+                          onChanged: (wallet) =>
+                              setState(() => _selectedWallet = wallet),
                           label: '',
                         ),
 
@@ -249,11 +258,16 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
               title: const Text('Nueva categoría'),
               content: TextField(
                 controller: controller,
-                decoration: const InputDecoration(hintText: 'Nombre de la categoría'),
+                decoration: const InputDecoration(
+                  hintText: 'Nombre de la categoría',
+                ),
                 textCapitalization: TextCapitalization.sentences,
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, controller.text.trim()),
                   child: const Text('Crear'),
@@ -264,7 +278,7 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
           if (result != null && result.isNotEmpty) {
             setState(() {
               _selectedCategoryName = result;
-              _categories.add(Category(name: result));
+              _categories.add(Category(name: result, userId: '${_user?.id}'));
             });
           }
         } else {
@@ -283,8 +297,8 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
             rightIcon: const Icon(Bootstrap.arrow_down_left, size: 20),
             onPressed: () => setState(() => _type = 'income'),
             backgroundColor: _type == 'income'
-              ? AppColors.purple.withValues(alpha: 0.5)
-              : AppColors.white.withValues(alpha: 0.5),
+                ? AppColors.purple.withValues(alpha: 0.5)
+                : AppColors.white.withValues(alpha: 0.5),
           ),
         ),
         const SizedBox(width: 16),
@@ -294,8 +308,8 @@ class _CreateTransactionScreenState extends ConsumerState<CreateTransactionScree
             rightIcon: const Icon(Bootstrap.arrow_up_right, size: 20),
             onPressed: () => setState(() => _type = 'expense'),
             backgroundColor: _type == 'expense'
-              ? AppColors.purple.withValues(alpha: 0.5)
-              : AppColors.white.withValues(alpha: 0.5),
+                ? AppColors.purple.withValues(alpha: 0.5)
+                : AppColors.white.withValues(alpha: 0.5),
           ),
         ),
       ],

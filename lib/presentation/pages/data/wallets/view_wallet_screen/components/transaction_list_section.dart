@@ -5,11 +5,15 @@ import 'package:chainly/core/constants/fonts.dart';
 import 'package:chainly/models/transaction_model.dart';
 import 'package:chainly/models/category_model.dart';
 import 'package:chainly/presentation/widgets/common/transaction_card_simple.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TransactionListSection extends StatelessWidget {
   final List<Transaction> transactions;
   final List<Category> categories;
   final String currency;
+
+  User? get _user => Supabase.instance.client.auth.currentUser;
+
 
   const TransactionListSection({
     super.key,
@@ -122,7 +126,7 @@ class TransactionListSection extends StatelessWidget {
               ...dayTransactions.map((t) {
                 final category =
                     categories.firstWhereOrNull((c) => c.id == t.categoryId) ??
-                    Category(name: 'Sin categoría', icon: 'question_mark');
+                    Category(name: 'Sin categoría', icon: 'question_mark', userId: '${_user?.id}');
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,

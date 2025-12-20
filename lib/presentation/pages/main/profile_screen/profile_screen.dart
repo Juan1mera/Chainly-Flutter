@@ -363,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildInfoRow(
                       icon: Icons.email,
                       label: 'Email',
-                      value: _user!.email ?? 'No disponible',
+                      value: _user!.id,
                     ),
                     _buildInfoRow(
                       icon: Icons.person,

@@ -12,6 +12,7 @@ import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_number_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_select.dart';
 import 'package:chainly/providers/wallet_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WalletsScreen extends ConsumerStatefulWidget {
   const WalletsScreen({super.key});
@@ -22,6 +23,9 @@ class WalletsScreen extends ConsumerStatefulWidget {
 
 class _WalletsScreenState extends ConsumerState<WalletsScreen> {
   final TextEditingController _nameController = TextEditingController();
+  User? get _user => Supabase.instance.client.auth.currentUser;
+
+
   String _selectedCurrency = 'USD';
   double _initialBalance = 0.0;
   String _selectedType = 'cash';
@@ -187,6 +191,7 @@ Future<void> _showCreateWalletModal() async {
     setState(() => _isLoading = true);
 
     final wallet = Wallet(
+      userId: '${_user?.id}', 
       name: _nameController.text.trim(),
       currency: _selectedCurrency,
       balance: _initialBalance,

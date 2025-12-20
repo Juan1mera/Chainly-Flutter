@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 class Wallet {
   final int? id;
+  final String userId;
   final String name;
   final String color;
   final String currency;
@@ -15,6 +16,7 @@ class Wallet {
 
   const Wallet({
     this.id,
+    required this.userId,
     required this.name,
     required this.color,
     required this.currency,
@@ -29,6 +31,7 @@ class Wallet {
   factory Wallet.fromMap(Map<String, dynamic> map) {
     return Wallet(
       id: map['id'] as int?,
+      userId: map['user_id'] as String,
       name: map['name'] as String,
       color: map['color'] as String,
       currency: map['currency'] as String,
@@ -46,6 +49,7 @@ class Wallet {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'user_id': userId,
       'name': name,
       'color': color,
       'currency': currency,
@@ -54,12 +58,13 @@ class Wallet {
       'is_archived': isArchived ? 1 : 0,
       'type': type,
       'created_at': createdAt.toIso8601String(),
-      'icon_bank': iconBank?.codePoint, // Guardar como int
+      'icon_bank': iconBank?.codePoint,
     };
   }
 
   Wallet copyWith({
     int? id,
+    String? userId,
     String? name,
     String? color,
     String? currency,
@@ -72,6 +77,7 @@ class Wallet {
   }) {
     return Wallet(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       name: name ?? this.name,
       color: color ?? this.color,
       currency: currency ?? this.currency,
