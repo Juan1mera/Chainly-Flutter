@@ -2,6 +2,7 @@ import 'package:uuid/uuid.dart';
 
 class Transaction {
   final String id;
+  final String userId;
   final String walletId;
   final String? categoryId;
   final String type; // 'income' | 'expense' | 'transfer'
@@ -15,6 +16,7 @@ class Transaction {
 
   const Transaction({
     required this.id,
+    required this.userId,
     required this.walletId,
     this.categoryId,
     required this.type,
@@ -28,6 +30,7 @@ class Transaction {
   });
 
   factory Transaction.create({
+    required String userId,
     required String walletId,
     String? categoryId,
     required String type,
@@ -38,6 +41,7 @@ class Transaction {
     final now = DateTime.now();
     return Transaction(
       id: _generateUuid(),
+      userId: userId,
       walletId: walletId,
       categoryId: categoryId,
       type: type,
@@ -51,6 +55,7 @@ class Transaction {
 
   factory Transaction.custom({
     required String id,
+    required String userId,
     required String walletId,
     String? categoryId,
     required String type,
@@ -64,6 +69,7 @@ class Transaction {
   }) {
     return Transaction(
       id: id,
+      userId: userId,
       walletId: walletId,
       categoryId: categoryId,
       type: type,
@@ -80,6 +86,7 @@ class Transaction {
   factory Transaction.fromSupabase(Map<String, dynamic> map) {
     return Transaction(
       id: map['id'] as String,
+      userId: map['user_id'] as String,
       walletId: map['wallet_id'] as String,
       categoryId: map['category_id'] as String?,
       type: map['type'] as String,
@@ -96,6 +103,7 @@ class Transaction {
   factory Transaction.fromLocal(Map<String, dynamic> map) {
     return Transaction(
       id: map['id'] as String,
+      userId: map['user_id'] as String? ?? 'local_user', // Fallback for migration
       walletId: map['wallet_id'] as String,
       categoryId: map['category_id'] as String?,
       type: map['type'] as String,
@@ -112,6 +120,7 @@ class Transaction {
   Map<String, dynamic> toSupabase() {
     return {
       'id': id,
+      'user_id': userId,
       'wallet_id': walletId,
       'category_id': categoryId,
       'type': type,
@@ -127,6 +136,7 @@ class Transaction {
   Map<String, dynamic> toLocal() {
     return {
       'id': id,
+      'user_id': userId,
       'wallet_id': walletId,
       'category_id': categoryId,
       'type': type,
@@ -142,6 +152,7 @@ class Transaction {
 
   Transaction copyWith({
     String? id,
+    String? userId,
     String? walletId,
     String? categoryId,
     String? type,
@@ -155,6 +166,7 @@ class Transaction {
   }) {
     return Transaction(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       walletId: walletId ?? this.walletId,
       categoryId: categoryId ?? this.categoryId,
       type: type ?? this.type,

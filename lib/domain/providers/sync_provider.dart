@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chainly/domain/providers/transaction_provider.dart';
 import 'package:chainly/domain/providers/wallet_provider.dart';
 import 'package:chainly/domain/providers/auth_provider.dart';
+import 'package:chainly/domain/providers/category_provider.dart';
 
 final syncProvider = Provider<SyncService>((ref) {
   return SyncService(ref);
@@ -23,13 +24,25 @@ class SyncService {
     try {
       debugPrint('Starting full data sync...');
       
-      // 1. Sync Wallets
+      // 1. First push pending local changes
+      debugPrint('Syncing pending operations...');
+      await _ref.read(walletRepositoryProvider).syncPendingOperations();
+      await _ref.read(categoryRepositoryProvider).syncPendingOperations();
+      await _ref.read(transactionRepositoryProvider).syncPendingOperations();
+
+      // 2. Sync Wallets (download)
       await _ref.read(walletRepositoryProvider).getWallets(
         userId: userId,
         forceRefresh: true,
       );
       
-      // 2. Sync Transactions
+      // 3. Sync Categories (download)
+      await _ref.read(categoryRepositoryProvider).getCategories(
+        userId: userId,
+        forceRefresh: true,
+      );
+      
+      // 4. Sync Transactions (download)
       await _ref.read(transactionRepositoryProvider).getAllTransactions(
         forceRefresh: true,
       );

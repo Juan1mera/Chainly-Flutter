@@ -33,7 +33,7 @@ class CategoryRepository {
       final response = await _supabase
           .from('categories')
           .select()
-          .or('user_id.eq.$userId,user_id.eq.system')
+          .eq('user_id', userId)
           .order('name');
 
       final categories = (response as List)

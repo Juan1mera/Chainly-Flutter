@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class Db {
   static final Db _instance = Db._internal();
@@ -21,12 +22,85 @@ class Db {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "wallets.db");
 
-    return await openDatabase(
+    final db = await openDatabase(
       path,
-      version: 2, // Incrementado para migración
+      version: 3, // Incrementado para migración v3
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+    
+    // Run data fix for any bad IDs (legacy text vs UUID)
+    await _fixInvalidCategoryIds(db);
+    
+    return db;
+  }
+  
+  Future<void> _fixInvalidCategoryIds(Database db) async {
+    try {
+      // 1. Find categories with invalid IDs (starting with 'category_')
+      final List<Map<String, dynamic>> badCategories = await db.query(
+        'categories',
+        where: "id LIKE 'category_%'",
+      );
+
+      if (badCategories.isEmpty) return;
+      
+      print('Migrating ${badCategories.length} categories with invalid IDs...');
+
+      for (final cat in badCategories) {
+        final oldId = cat['id'] as String;
+        final newId = const Uuid().v4();
+        
+        // 2. Clear pending operations for this bad ID to avoid sync errors
+        // We delete them because they contain the bad ID in the payload
+        await db.delete(
+          'pending_operations',
+          where: "record_id = ?",
+          whereArgs: [oldId],
+        );
+
+        // 3. Update the Category with new UUID
+        // We ensure it's marked as NOT synced so it tries to push to Supabase again (with new ID)
+        await db.update(
+          'categories',
+          {'id': newId, 'is_synced': 0}, 
+          where: 'id = ?',
+          whereArgs: [oldId],
+        );
+
+        // 4. Update any Transactions referencing this old Category ID
+        await db.update(
+          'transactions',
+          {'category_id': newId}, // Transactions remain unsynced/synced status, but ID is fixed
+          where: 'category_id = ?',
+          whereArgs: [oldId],
+        );
+        
+        // Also clear pending operations for transactions referencing this bad ID
+        // This is drastic but necessary as the payloads in pending_ops have the old FK
+        final pendingTxns = await db.query(
+            'pending_operations', 
+            where: "table_name = 'transactions' AND data LIKE ?", 
+            whereArgs: ['%$oldId%']
+        );
+        
+        for (final op in pendingTxns) {
+           await db.delete('pending_operations', where: 'id = ?', whereArgs: [op['id']]);
+           // Note: The transaction record itself in 'transactions' table was updated above.
+           // Next time sync runs, it might not pick it up if we don't mark it unsynced?
+           // Ideally we should mark affected transactions as is_synced=0
+           await db.update(
+             'transactions',
+             {'is_synced': 0},
+             where: 'category_id = ?',
+             whereArgs: [newId]
+           );
+        }
+      }
+      print('Migration of invalid IDs completed.');
+    } catch (e) {
+      print('Error during ID migration: $e');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -93,6 +167,27 @@ class Db {
       // Nota: Esta migración es compleja, por ahora mantenemos INTEGER localmente
       // pero el repository generará UUIDs para Supabase
     }
+
+    if (oldVersion < 3) {
+      // Migración v3: Agregar user_id a transacciones para RLS
+      print('Iniciando migración v3: user_id en transacciones');
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN user_id TEXT');
+        
+        // Backfill user_id desde wallets
+        await db.execute('''
+          UPDATE transactions 
+          SET user_id = (SELECT user_id FROM wallets WHERE wallets.id = transactions.wallet_id)
+        ''');
+        
+        // Crear índice para user_id
+        await db.execute('CREATE INDEX idx_transactions_user ON transactions(user_id)');
+        
+        print('Migración v3 completada exitosamente');
+      } catch (e) {
+        print('Error en migración v3: $e');
+      }
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -138,6 +233,7 @@ class Db {
     await db.execute('''
       CREATE TABLE transactions(
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL, 
         wallet_id TEXT NOT NULL,
         type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer')),
         amount REAL NOT NULL,

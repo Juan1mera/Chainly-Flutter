@@ -1,3 +1,4 @@
+import 'package:chainly/domain/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -48,7 +49,11 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
+      final userId = _ref.read(currentUserIdProvider);
+      if (userId == null) throw Exception('User not logged in');
+
       final transaction = Transaction.create(
+        userId: userId,
         walletId: walletId,
         type: type,
         amount: amount,
@@ -112,8 +117,12 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
         );
       }
 
+      final userId = _ref.read(currentUserIdProvider);
+      if (userId == null) throw Exception('User not logged in');
+
       // 2. Create outgoing transaction
       final outTxn = Transaction.create(
+        userId: userId,
         walletId: fromWalletId,
         type: 'expense',
         amount: amount,
@@ -124,6 +133,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
       
       // 3. Create incoming transaction
       final inTxn = Transaction.create(
+        userId: userId,
         walletId: toWalletId,
         type: 'income',
         amount: finalAmount,

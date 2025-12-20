@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class Category {
   final String id;
   final String userId;
@@ -146,7 +148,6 @@ class Category {
       );
 
   static String _generateUuid() {
-    final now = DateTime.now().microsecondsSinceEpoch;
-    return 'category_$now';
+    return const Uuid().v4();
   }
 }
