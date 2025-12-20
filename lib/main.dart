@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:chainly/core/constants/fonts.dart';
+import 'package:chainly/core/database/env.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; 
@@ -13,9 +14,8 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   await Supabase.initialize(
-    url: 'https://dpryofqwatjjupnrzoqz.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcnlvZnF3YXRqanVwbnJ6b3F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NTQ0MzksImV4cCI6MjA2MzUzMDQzOX0.BlX52M9OkBvpaXSIkFW2vTtI5R_Wm0qIJI36BTDpQqk',
+    url: Env.supabaseUrl ?? '',
+    anonKey: Env.supabaseKey ?? '',
   );
 
   runApp(
@@ -46,10 +46,7 @@ class MyApp extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                AppColors.blue,
-                AppColors.yellow,
-              ],
+              colors: AppColors.bgGradient1,
               stops: [0.0, 1.0],
             ),
           ),
