@@ -117,8 +117,8 @@ class TransactionRepository {
       try {
         await _supabase.from('transactions').insert(transaction.toSupabase());
         
-        // Supabase trigger/function debería actualizar el balance en server, 
-        // pero podemos optimizar localmente.
+        // Update remote wallet balance
+        await _updateRemoteWalletBalance(transaction.walletId, transaction.amount, transaction.type);
 
         final syncedTransaction = transaction.markAsSynced();
         await _localDb.update(
@@ -202,6 +202,13 @@ class TransactionRepository {
     if (isOnline) {
       try {
         await _supabase.from('transactions').delete().eq('id', id);
+        
+        // Revert remote balance
+        // We need the txn details which we fetched earlier locally (txn var)
+        if (txn != null) {
+          await _updateRemoteWalletBalance(txn.walletId, -txn.amount, txn.type);
+        }
+        
         return true;
       } catch (e) {
         debugPrint('Error deleting transaction from Supabase: $e');
@@ -233,6 +240,7 @@ class TransactionRepository {
             final txn = await _getTransactionFromLocal(recordId);
             if (txn != null) {
               await _supabase.from('transactions').insert(txn.toSupabase());
+              await _updateRemoteWalletBalance(txn.walletId, txn.amount, txn.type);
               await _markAsSynced(recordId);
             }
             break;
@@ -332,5 +340,22 @@ class TransactionRepository {
           whereArgs: [id],
         );
      }
+  }
+
+  Future<void> _updateRemoteWalletBalance(String walletId, double amount, String type) async {
+    final factor = type == 'income' ? 1 : -1;
+    final delta = amount * factor;
+
+    try {
+      // 1. Get current remote balance
+      final res = await _supabase.from('wallets').select('balance').eq('id', walletId).single();
+      final currentBalance = (res['balance'] as num).toDouble();
+      final newBalance = currentBalance + delta;
+
+      await _supabase.from('wallets').update({'balance': newBalance}).eq('id', walletId);
+      
+    } catch (e) {
+      debugPrint('Error updating remote wallet balance: $e');
+    }
   }
 }
