@@ -1,6 +1,7 @@
 // lib/main_drawer_nav.dart
 import 'package:chainly/presentation/pages/main/settings_screen/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chainly/presentation/pages/main/categories_screen/categories_screen.dart';
 import 'package:chainly/presentation/pages/main/home_screen/components/header_home_section.dart';
 import 'package:chainly/presentation/pages/main/home_screen/home_screen.dart';
@@ -8,15 +9,16 @@ import 'package:chainly/presentation/pages/main/wallets_screen/wallets_screen.da
 import 'package:chainly/presentation/pages/main/stats_screen/stats_screen.dart';
 import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/app_drawer.dart';
+import 'package:chainly/domain/providers/sync_provider.dart';
 
-class MainDrawerNav extends StatefulWidget {
+class MainDrawerNav extends ConsumerStatefulWidget {
   const MainDrawerNav({super.key});
 
   @override
-  State<MainDrawerNav> createState() => _MainDrawerNavState();
+  ConsumerState<MainDrawerNav> createState() => _MainDrawerNavState();
 }
 
-class _MainDrawerNavState extends State<MainDrawerNav> {
+class _MainDrawerNavState extends ConsumerState<MainDrawerNav> {
   int _selectedIndex = 0;
 
   static const List<Widget> _screens = [
@@ -27,6 +29,15 @@ class _MainDrawerNavState extends State<MainDrawerNav> {
     ProfileScreen(),
     SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Trigger sync when app enters the main navigation (logged in)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(syncProvider).syncAll();
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
