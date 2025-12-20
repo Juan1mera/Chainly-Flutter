@@ -23,7 +23,7 @@ class Db {
 
     return await openDatabase(
       path,
-      version: 3, // <-- versión 3
+      version: 1, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -35,58 +35,13 @@ class Db {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Migración 1 → 2 (de la versión anterior)
-      await db.execute('ALTER TABLE transactions DROP COLUMN IF EXISTS comment');
-      await db.execute('ALTER TABLE transactions DROP COLUMN IF EXISTS currency');
-      await db.execute('ALTER TABLE transactions ADD COLUMN description TEXT');
-      await db.execute('ALTER TABLE transactions ADD COLUMN note TEXT');
-    }
-
-    if (oldVersion < 3) {
-      // Migración 2 → 3: Eliminar description, hacer category_id NOT NULL
-      // SQLite no permite DROP COLUMN directamente → recrear tabla
-      await db.transaction((txn) async {
-        // 1. Crear tabla temporal
-        await txn.execute('''
-          CREATE TABLE transactions_temp(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            wallet_id INTEGER NOT NULL,
-            type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer')),
-            amount REAL NOT NULL,
-            note TEXT,
-            date TEXT NOT NULL,
-            category_id INTEGER NOT NULL,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
-            FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE RESTRICT
-          )
-        ''');
-
-        // 2. Copiar datos (category_id = 1 si no existe, o mantener si hay)
-        await txn.execute('''
-          INSERT INTO transactions_temp (
-            id, wallet_id, type, amount, note, date, category_id, created_at
-          )
-          SELECT 
-            id, wallet_id, type, amount, note, date, 
-            COALESCE(category_id, 1), created_at
-          FROM transactions
-        ''');
-
-        // 3. Eliminar tabla antigua
-        await txn.execute('DROP TABLE transactions');
-
-        // 4. Renombrar
-        await txn.execute('ALTER TABLE transactions_temp RENAME TO transactions');
-      });
-    }
   }
 
   Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE wallets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
         name TEXT NOT NULL,
         color TEXT NOT NULL,
         currency TEXT NOT NULL,
@@ -102,6 +57,7 @@ class Db {
     await db.execute('''
       CREATE TABLE categories(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
         name TEXT NOT NULL UNIQUE,
         monthly_budget REAL DEFAULT 0.0,
         icon TEXT,
