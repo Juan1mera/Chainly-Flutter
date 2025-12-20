@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class Transaction {
   final String id;
   final String walletId;
@@ -174,8 +176,7 @@ class Transaction {
       );
 
   static String _generateUuid() {
-    final now = DateTime.now().microsecondsSinceEpoch;
-    return 'txn_$now';
+    return const Uuid().v4();
   }
 
   @override

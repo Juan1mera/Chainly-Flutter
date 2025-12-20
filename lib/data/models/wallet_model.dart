@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:uuid/uuid.dart';
 
 class Wallet {
   final String id; 
@@ -198,9 +199,8 @@ class Wallet {
   String toString() =>
       'Wallet{id: $id, name: $name, balance: $balance, currency: $currency, synced: $isSynced}';
 
-  // Generador simple de UUID (en producción usa package:uuid)
+  // Generador de UUID estándar
   static String _generateUuid() {
-    final now = DateTime.now().microsecondsSinceEpoch;
-    return 'wallet_$now';
+    return const Uuid().v4();
   }
 }
