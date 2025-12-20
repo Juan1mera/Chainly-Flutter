@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
+import 'package:chainly/core/constants/svgs.dart';
 import 'package:chainly/presentation/pages/auth/register_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/main_drawer_nav.dart';
 import 'package:chainly/presentation/widgets/ui/custom_button.dart';
 import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -112,25 +112,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
             
                 // === HEADER CON LOGO ===
-                SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: SvgPicture.asset(
-                    'assets/Icon.svg',
-                    fit: BoxFit.contain,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.black,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-            
+                AppSvgs.chainlyLogoSvg(),
                 
                 const Text(
                   '¡Hola!',
                   style: TextStyle(
                     fontSize: 36,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.clashDisplay,
                     color: AppColors.black,
                   ),
@@ -139,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Bienvenid@ a chainly',
                   style: TextStyle(
                     fontSize: 26,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.clashDisplay,
                     color: AppColors.black,
                   ),

@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
+import 'package:chainly/core/constants/svgs.dart';
 import 'package:chainly/presentation/pages/auth/login_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/main_drawer_nav.dart';
 import 'package:chainly/presentation/widgets/ui/custom_button.dart';
 import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -113,26 +113,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               const SizedBox(height: 50),
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: SvgPicture.asset(
-                  'assets/Icon.svg',
-                  fit: BoxFit.contain,
-                  colorFilter: const ColorFilter.mode(
-                    AppColors.black,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-
-              // Textos de bienvenida
+              AppSvgs.chainlyLogoSvg(),
 
               const Text(
                 '¡Crea tu cuenta!',
                 style: TextStyle(
                   fontSize: 36,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.clashDisplay,
                   color: AppColors.black,
                 ),
