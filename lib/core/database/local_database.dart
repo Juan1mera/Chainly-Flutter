@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/rendering.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,7 +46,7 @@ class Db {
 
       if (badCategories.isEmpty) return;
       
-      print('Migrating ${badCategories.length} categories with invalid IDs...');
+      // print('Migrating ${badCategories.length} categories with invalid IDs...');
 
       for (final cat in badCategories) {
         final oldId = cat['id'] as String;
@@ -97,9 +98,9 @@ class Db {
            );
         }
       }
-      print('Migration of invalid IDs completed.');
+      // print('Migration of invalid IDs completed.');
     } catch (e) {
-      print('Error during ID migration: $e');
+      debugPrint('Error during ID migration: $e');
     }
   }
 

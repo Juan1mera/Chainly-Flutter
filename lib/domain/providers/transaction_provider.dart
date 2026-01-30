@@ -135,7 +135,6 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
         categoryId: 'transfer_in', // ID especial o buscar categoría real
       );
 
-      // TODO: Wrap in transaction logic if possible or do sequential
       await _repository.createTransaction(outTxn);
       await _repository.createTransaction(inTxn);
       
