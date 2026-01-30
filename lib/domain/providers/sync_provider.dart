@@ -26,25 +26,25 @@ class SyncService {
       
       // 1. First push pending local changes
       debugPrint('Syncing pending operations...');
-      await _ref.read(walletRepositoryProvider).syncPendingOperations();
-      await _ref.read(categoryRepositoryProvider).syncPendingOperations();
-      await _ref.read(transactionRepositoryProvider).syncPendingOperations();
+      // await _ref.read(walletRepositoryProvider).syncPendingOperations();
+      // await _ref.read(categoryRepositoryProvider).syncPendingOperations();
+      // await _ref.read(transactionRepositoryProvider).syncPendingOperations();
 
       // 2. Sync Wallets (download)
       await _ref.read(walletRepositoryProvider).getWallets(
         userId: userId,
-        forceRefresh: true,
+        // forceRefresh: true,
       );
       
       // 3. Sync Categories (download)
       await _ref.read(categoryRepositoryProvider).getCategories(
         userId: userId,
-        forceRefresh: true,
+        // forceRefresh: true,
       );
       
       // 4. Sync Transactions (download)
       await _ref.read(transactionRepositoryProvider).getAllTransactions(
-        forceRefresh: true,
+        // forceRefresh: true,
       );
 
       // 3. Refresh Providers to update UI

@@ -24,7 +24,7 @@ class Db {
 
     final db = await openDatabase(
       path,
-      version: 3, // Incrementado para migración v3
+      version: 1, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -109,85 +109,7 @@ class Db {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Migración de versión 1 a 2: agregar nuevas columnas para sincronización
-      await db.execute('ALTER TABLE wallets ADD COLUMN updated_at TEXT');
-      await db.execute('ALTER TABLE wallets ADD COLUMN version INTEGER NOT NULL DEFAULT 1');
-      await db.execute('ALTER TABLE wallets ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
-      
-      // Actualizar wallets existentes con valores por defecto
-      await db.execute('''
-        UPDATE wallets 
-        SET updated_at = created_at, 
-            version = 1, 
-            is_synced = 0 
-        WHERE updated_at IS NULL
-      ''');
-
-      // Crear tabla de operaciones pendientes
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS pending_operations (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          operation_type TEXT NOT NULL,
-          table_name TEXT NOT NULL,
-          record_id TEXT NOT NULL,
-          data TEXT NOT NULL,
-          created_at TEXT NOT NULL,
-          retry_count INTEGER NOT NULL DEFAULT 0
-        )
-      ''');
-
-      // Actualizar categorías
-      await db.execute('ALTER TABLE categories ADD COLUMN updated_at TEXT');
-      await db.execute('ALTER TABLE categories ADD COLUMN version INTEGER NOT NULL DEFAULT 1');
-      await db.execute('ALTER TABLE categories ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
-      
-      await db.execute('''
-        UPDATE categories 
-        SET updated_at = datetime('now'), 
-            version = 1, 
-            is_synced = 0 
-        WHERE updated_at IS NULL
-      ''');
-
-      // Actualizar transacciones
-      await db.execute('ALTER TABLE transactions ADD COLUMN updated_at TEXT');
-      await db.execute('ALTER TABLE transactions ADD COLUMN version INTEGER NOT NULL DEFAULT 1');
-      await db.execute('ALTER TABLE transactions ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
-      
-      await db.execute('''
-        UPDATE transactions 
-        SET updated_at = created_at, 
-            version = 1, 
-            is_synced = 0 
-        WHERE updated_at IS NULL
-      ''');
-
-      // Migrar IDs de INTEGER a TEXT (UUID)
-      // Nota: Esta migración es compleja, por ahora mantenemos INTEGER localmente
-      // pero el repository generará UUIDs para Supabase
-    }
-
-    if (oldVersion < 3) {
-      // Migración v3: Agregar user_id a transacciones para RLS
-      print('Iniciando migración v3: user_id en transacciones');
-      try {
-        await db.execute('ALTER TABLE transactions ADD COLUMN user_id TEXT');
-        
-        // Backfill user_id desde wallets
-        await db.execute('''
-          UPDATE transactions 
-          SET user_id = (SELECT user_id FROM wallets WHERE wallets.id = transactions.wallet_id)
-        ''');
-        
-        // Crear índice para user_id
-        await db.execute('CREATE INDEX idx_transactions_user ON transactions(user_id)');
-        
-        print('Migración v3 completada exitosamente');
-      } catch (e) {
-        print('Error en migración v3: $e');
-      }
-    }
+    
   }
 
   Future<void> _createTables(Database db) async {

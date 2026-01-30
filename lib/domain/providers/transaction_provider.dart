@@ -1,7 +1,6 @@
 import 'package:chainly/domain/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/repositories/transaction_repository.dart';
 import 'wallet_provider.dart';
@@ -9,9 +8,7 @@ import 'wallet_provider.dart';
 // Provider del repositorio
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return TransactionRepository(
-    supabase: ref.watch(supabaseClientProvider),
     localDb: ref.watch(localDatabaseProvider),
-    connectivity: Connectivity(),
   );
 });
 

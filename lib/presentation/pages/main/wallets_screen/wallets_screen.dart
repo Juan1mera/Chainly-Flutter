@@ -11,7 +11,6 @@ import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_number_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_select.dart';
 import 'package:chainly/domain/providers/wallet_provider.dart';
-import 'package:chainly/domain/providers/connectivity_provider.dart';
 
 class WalletsScreen extends ConsumerStatefulWidget {
   const WalletsScreen({super.key});
@@ -238,58 +237,11 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
       walletsProvider(const WalletFilters(includeArchived: false)),
     );
     
-    // Listener de conectividad para mostrar snackbar
-    ref.listen(connectivityStreamProvider, (previous, next) {
-      next.whenData((isOnline) {
-        // Corrección: previous.value es nullable, check previo
-        final preValue = previous?.value ?? true;
-        
-        if (isOnline && !preValue) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Conexión restaurada. Sincronizando...'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      });
-    });
 
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          // Indicador de conectividad
-          Consumer(
-            builder: (context, ref, child) {
-              final connectivityAsync = ref.watch(connectivityStreamProvider);
-              
-              return connectivityAsync.when(
-                data: (isOnline) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isOnline ? Icons.cloud_done : Icons.cloud_off,
-                        size: 20,
-                        color: isOnline ? Colors.green : Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isOnline ? 'Online' : 'Offline',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isOnline ? Colors.green : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              );
-            },
-          ),
-        ],
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.black,

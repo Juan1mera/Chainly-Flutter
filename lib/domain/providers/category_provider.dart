@@ -1,17 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/models/category_model.dart';
 import '../../data/repositories/category_repository.dart';
 import 'auth_provider.dart';
-import 'wallet_provider.dart'; // import for supabaseClientProvider
+import 'wallet_provider.dart';
 
 // Provider del repositorio
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return CategoryRepository(
-    supabase: ref.watch(supabaseClientProvider),
     localDb: ref.watch(localDatabaseProvider),
-    connectivity: Connectivity(),
   );
 });
 

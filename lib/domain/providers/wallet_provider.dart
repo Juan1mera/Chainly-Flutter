@@ -1,18 +1,9 @@
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/wallet_model.dart';
 import '../../data/repositories/wallet_repository.dart';
 import '../../core/database/local_database.dart';
 import 'auth_provider.dart';
-import 'connectivity_provider.dart';
-
-// Provider del cliente Supabase
-final supabaseClientProvider = Provider<SupabaseClient>((ref) {
-  return Supabase.instance.client;
-});
 
 // Provider de la base de datos local
 final localDatabaseProvider = Provider<Db>((ref) {
@@ -22,22 +13,8 @@ final localDatabaseProvider = Provider<Db>((ref) {
 // Provider del repositorio de wallets
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   return WalletRepository(
-    supabase: ref.watch(supabaseClientProvider),
     localDb: ref.watch(localDatabaseProvider),
-    connectivity: Connectivity(),
   );
-});
-
-// Provider de stream de wallets (tiempo real desde Supabase)
-final walletsStreamProvider = StreamProvider<List<Wallet>>((ref) {
-  final repository = ref.watch(walletRepositoryProvider);
-  final userId = ref.watch(currentUserIdProvider);
-
-  if (userId == null) {
-    return Stream.value([]);
-  }
-
-  return repository.watchWallets(userId);
 });
 
 // Provider de lista de wallets con caché y filtros
@@ -50,7 +27,6 @@ final walletsProvider = FutureProvider.family<List<Wallet>, WalletFilters>(
 
     final wallets = await repository.getWallets(
       userId: userId,
-      forceRefresh: filters.forceRefresh,
       onlyFavorites: filters.onlyFavorites,
       includeArchived: filters.includeArchived,
     );
@@ -227,40 +203,17 @@ class WalletNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  // Sincroniza operaciones pendientes
-  Future<void> syncPendingOperations() async {
-    try {
-      await _repository.syncPendingOperations();
-      _invalidateProviders();
-    } catch (e) {
-      debugPrint('Error sincronizando operaciones: $e');
-    }
-  }
-
-  // Refresca los datos desde el servidor
+  // Refresca los datos
   Future<void> refresh() async {
     _invalidateProviders();
   }
 
   void _invalidateProviders() {
     _ref.invalidate(walletsProvider);
-    _ref.invalidate(walletsStreamProvider);
     _ref.invalidate(favoriteWalletsProvider);
     _ref.invalidate(totalBalanceProvider);
   }
 }
-
-// Listener de conectividad para sincronización automática
-final connectivityListenerProvider = Provider<void>((ref) {
-  final connectivity = ref.watch(connectivityStreamProvider);
-  
-  connectivity.whenData((isConnected) {
-    if (isConnected) {
-      // Cuando se recupera la conexión, sincroniza
-      ref.read(walletNotifierProvider.notifier).syncPendingOperations();
-    }
-  });
-});
 
 // Clase para filtros de wallets
 class WalletFilters {

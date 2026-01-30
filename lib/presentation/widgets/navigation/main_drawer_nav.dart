@@ -10,7 +10,6 @@ import 'package:chainly/presentation/pages/main/stats_screen/stats_screen.dart';
 import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/app_drawer.dart';
 import 'package:chainly/domain/providers/sync_provider.dart';
-import 'package:chainly/domain/providers/connectivity_provider.dart';
 
 class MainDrawerNav extends ConsumerStatefulWidget {
   const MainDrawerNav({super.key});
@@ -46,25 +45,6 @@ class _MainDrawerNavState extends ConsumerState<MainDrawerNav> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to connectivity changes globally
-    ref.listen(connectivityStreamProvider, (previous, next) {
-      next.whenData((isOnline) {
-        final wasOnline = previous?.value ?? false;
-        // If we transition from offline (or initial null) to online, trigger sync
-        if (isOnline && !wasOnline) {
-          debugPrint('Connectivity restored. Triggering auto-sync...');
-          ref.read(syncProvider).syncAll();
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Conexión restaurada. Sincronizando datos...'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      });
-    });
 
     return Scaffold(
       drawer: AppDrawer(currentIndex: _selectedIndex, onItemTapped: _onItemTapped),
