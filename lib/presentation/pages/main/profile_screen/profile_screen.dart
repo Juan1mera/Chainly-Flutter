@@ -245,11 +245,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Display Name',
                     value: _displayName ?? 'Sin nombre',
                   ),
-                  _buildInfoRow(
-                    icon: Icons.security,
-                    label: 'User ID',
-                    value: _userData!['id'],
-                  ),
+                  // _buildInfoRow(
+                  //   icon: Icons.security,
+                  //   label: 'User ID',
+                  //   value: _userData!['id'],
+                  // ),
                 ],
               ),
             ),
