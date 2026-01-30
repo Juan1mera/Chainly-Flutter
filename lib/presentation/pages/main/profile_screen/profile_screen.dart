@@ -17,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   StreamSubscription? _authSubscription;
 
   Map<String, dynamic>? get _userData => _authService.currentUserData;
-  
+
   String? get _displayName => _userData?['name'];
   String? get _avatarUrl => _userData?['avatar_url'];
   String? get _email => _userData?['email'];
@@ -40,9 +40,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _uploadImage() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final url = await _authService.uploadProfilePicture();
-      
+
       if (mounted && url != null) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
+      debugPrint('Error: ${e.toString()}');
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,11 +73,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       setState(() => _isLoading = true);
       await _authService.deleteProfilePicture();
-      
+
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Photo deleted'), backgroundColor: Colors.orange),
+          const SnackBar(
+            content: Text('Photo deleted'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
     } catch (e) {
@@ -145,7 +149,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: !hasImage
               ? Text(
                   (_email?[0] ?? 'U').toUpperCase(),
-                  style: const TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 40,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 )
               : null,
         ),
@@ -154,7 +162,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircleAvatar(
               radius: 60,
               backgroundColor: Colors.black54,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              ),
             ),
           ),
         if (!_isLoading)
@@ -170,7 +181,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                 ),
-                child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -203,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-            
+
             // PANEL DE INFORMACIÓN
             Container(
               width: double.infinity,
@@ -215,8 +230,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Account Information', 
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Account Information',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 20),
                   _buildInfoRow(
                     icon: Icons.email,
@@ -237,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             CustomButton(
               text: 'Log out',
               leftIcon: const Icon(Icons.logout),
@@ -253,7 +270,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoRow({required IconData icon, required String label, required String value}) {
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -264,8 +285,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -276,19 +306,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<bool> _showSignOutDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Log out'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Log out'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Log out'),
+              ),
+            ],
           ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 }

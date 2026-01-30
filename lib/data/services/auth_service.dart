@@ -81,12 +81,12 @@ class AuthService {
 
     try {
       final bytes = await imageFile.readAsBytes();
-      final fileExt = imageFile.path.split('.').last;
+      final fileExt = imageFile.name.split('.').last;
       // Usamos el ID del usuario como nombre fijo para evitar acumular basura en el bucket
       final fileName = '${user.id}/avatar.$fileExt';
 
       // Subir imagen (upsert: true reemplaza la anterior si existe)
-      await _supabase.storage.from('avatars').uploadBinary(
+      await _supabase.storage.from('avatars_chainly').uploadBinary(
             fileName,
             bytes,
             fileOptions: FileOptions(
@@ -96,7 +96,7 @@ class AuthService {
           );
 
       // Obtener URL y actualizar metadatos
-      final url = _supabase.storage.from('avatars').getPublicUrl(fileName);
+      final url = _supabase.storage.from('avatars_chainly').getPublicUrl(fileName);
       
       // Cache busting: añadimos un timestamp para que la imagen se refresque en la UI
       final urlWithCacheBusting = '$url?t=${DateTime.now().millisecondsSinceEpoch}';
@@ -122,7 +122,7 @@ class AuthService {
       final fileName = uri.pathSegments.last; 
       final fullPath = '${user!.id}/$fileName';
 
-      await _supabase.storage.from('avatars').remove([fullPath]);
+      await _supabase.storage.from('avatars_chainly').remove([fullPath]);
       await _supabase.auth.updateUser(UserAttributes(data: {'avatar_url': null}));
     } catch (e) {
       debugPrint('Error eliminando foto: $e');
