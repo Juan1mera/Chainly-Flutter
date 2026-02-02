@@ -117,18 +117,18 @@ packages:
     dependency: "direct main"
     description:
       name: connectivity_plus
-      sha256: "224a77051d52a11fbad53dd57827594d3bd24f945af28bd70bab376d68d437f0"
+      sha256: "33bae12a398f841c6cda09d1064212957265869104c478e5ad51e2fb26c3973c"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.2"
+    version: "7.0.0"
   connectivity_plus_platform_interface:
     dependency: transitive
     description:
       name: connectivity_plus_platform_interface
-      sha256: cf1d1c28f4416f8c654d7dc3cd638ec586076255d407cef3ddbdaf178272a71a
+      sha256: "42657c1715d48b167930d5f34d00222ac100475f73d10162ddf43e714932f204"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.4"
+    version: "2.0.1"
   convert:
     dependency: transitive
     description:
@@ -740,10 +740,10 @@ packages:
     dependency: "direct main"
     description:
       name: shared_preferences
-      sha256: "6e8bf70b7fef813df4e9a36f658ac46d107db4b4cfe1048b477d4e453a8159f5"
+      sha256: "2939ae520c9024cb197fc20dee269cd8cdbf564c8b5746374ec6cacdc5169e64"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.3"
+    version: "2.5.4"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -1214,5 +1214,5 @@ packages:
     source: hosted
     version: "2.1.0"
 sdks:
-  dart: ">=3.8.1 <4.0.0"
-  flutter: ">=3.32.0"
+  dart: ">=3.9.0 <4.0.0"
+  flutter: ">=3.35.0"

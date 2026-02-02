@@ -1,14 +1,20 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  
+  /// Usuario cargado desde almacenamiento local para modo offline
+  static User? offlineSessionUser;
+  static const String _kOfflineUserKey = 'chainly_offline_user';
 
   // --- GETTERS DE ESTADO ---
 
-  /// Devuelve el usuario actual de la sesión
-  User? get currentUser => _supabase.auth.currentUser;
+  /// Devuelve el usuario actual de la sesión (Supabase o Local Offline)
+  User? get currentUser => _supabase.auth.currentUser ?? offlineSessionUser;
 
   /// Devuelve un Map con la data procesada del usuario
   Map<String, dynamic>? get currentUserData {
@@ -28,6 +34,39 @@ class AuthService {
 
   /// Stream para escuchar cambios en la autenticación y el usuario
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
+  // --- PERSISTENCIA OFFLINE ---
+
+  static Future<void> saveLocalUser(User user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kOfflineUserKey, jsonEncode(user.toJson()));
+      offlineSessionUser = user;
+    } catch (e) {
+      debugPrint('Error guardando usuario local: $e');
+    }
+  }
+
+  static Future<User?> tryRestoreLocalUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_kOfflineUserKey);
+      if (jsonStr != null) {
+        final user = User.fromJson(jsonDecode(jsonStr));
+        offlineSessionUser = user;
+        return user;
+      }
+    } catch (e) {
+      debugPrint('Error restaurando usuario local: $e');
+    }
+    return null;
+  }
+
+  static Future<void> clearLocalUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kOfflineUserKey);
+    offlineSessionUser = null;
+  }
 
   // --- ACCIONES DE AUTH ---
 
@@ -51,7 +90,10 @@ class AuthService {
     );
   }
 
-  Future<void> signOut() async => await _supabase.auth.signOut();
+  Future<void> signOut() async {
+    await clearLocalUser();
+    await _supabase.auth.signOut();
+  }
 
   // --- GESTIÓN DE PERFIL ---
 
