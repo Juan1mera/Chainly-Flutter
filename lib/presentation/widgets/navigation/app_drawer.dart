@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
+import 'package:chainly/core/database/env.dart';
 
 class AppDrawer extends StatelessWidget {
   final int currentIndex;
@@ -145,6 +146,14 @@ class AppDrawer extends StatelessWidget {
             title: 'Settings',
             isSelected: currentIndex == 5,
           ),
+          if (Env.enviroment == 'DEV')
+            _buildDrawerItem(
+              context,
+              index: 6,
+              icon: Icons.bug_report_outlined,
+              title: 'Tests',
+              isSelected: currentIndex == 6,
+            ),
 
           const Spacer(),
 

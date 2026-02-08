@@ -10,6 +10,8 @@ import 'package:chainly/presentation/pages/main/stats_screen/stats_screen.dart';
 import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/app_drawer.dart';
 import 'package:chainly/domain/providers/sync_provider.dart';
+import 'package:chainly/core/database/env.dart';
+import 'package:chainly/presentation/pages/tests_page.dart';
 
 class MainDrawerNav extends ConsumerStatefulWidget {
   const MainDrawerNav({super.key});
@@ -21,13 +23,14 @@ class MainDrawerNav extends ConsumerStatefulWidget {
 class _MainDrawerNavState extends ConsumerState<MainDrawerNav> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _screens = [
-    HomeScreen(),
-    WalletsScreen(),
-    StatsScreen(),
-    CategoriesScreen(),
-    ProfileScreen(),
-    SettingsScreen(),
+  List<Widget> get _screens => [
+    const HomeScreen(),
+    const WalletsScreen(),
+    const StatsScreen(),
+    const CategoriesScreen(),
+    const ProfileScreen(),
+    const SettingsScreen(),
+    if (Env.enviroment == 'DEV') const TestsPage(),
   ];
 
   @override
