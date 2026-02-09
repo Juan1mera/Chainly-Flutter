@@ -10,6 +10,9 @@ class CustomDatePicker extends StatefulWidget {
   final String? hintText;
   final IconData icon;
 
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+
   const CustomDatePicker({
     super.key,
     this.label,
@@ -17,6 +20,8 @@ class CustomDatePicker extends StatefulWidget {
     required this.onDateSelected,
     this.hintText,
     this.icon = Icons.calendar_today_outlined,
+    this.firstDate,
+    this.lastDate,
   });
 
   @override
@@ -51,8 +56,8 @@ class _CustomDatePickerState extends State<CustomDatePicker> with TickerProvider
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: widget.selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      firstDate: widget.firstDate ?? DateTime(2000),
+      lastDate: widget.lastDate ?? DateTime(2101),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
