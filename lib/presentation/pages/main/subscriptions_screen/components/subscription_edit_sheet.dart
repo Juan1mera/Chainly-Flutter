@@ -10,7 +10,6 @@ import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_number_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_select.dart';
 import 'package:chainly/presentation/widgets/ui/custom_date_picker.dart';
-import 'package:intl/intl.dart';
 
 class SubscriptionEditSheet extends ConsumerStatefulWidget {
   final Subscription? subscription;
@@ -28,7 +27,6 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
   late double _amount;
   late DateTime _billingDate;
   Wallet? _selectedWallet;
-  String _currency = 'USD';
   bool _isEditing = false;
 
   @override
@@ -39,10 +37,11 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
     _descriptionController = TextEditingController(text: widget.subscription?.description ?? '');
     _faviconController = TextEditingController(text: widget.subscription?.favicon ?? '');
     _amount = widget.subscription?.amount ?? 0.0;
-    _billingDate = widget.subscription?.billingDate ?? DateTime.now();
-    _currency = widget.subscription?.currency ?? 'USD';
-    
-    // Initial fetch for wallets is handled in build via watch
+    final now = DateTime.now();
+    _billingDate = widget.subscription?.billingDate ?? now;
+    if (_billingDate.isBefore(DateTime(now.year, now.month, now.day))) {
+      _billingDate = now;
+    }
   }
 
   @override
@@ -148,7 +147,8 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
             ),
             const SizedBox(height: 16),
             CustomDatePicker(
-              label: 'Fecha de cobro',
+              label: 'Fecha de próximo cobro',
+              firstDate: DateTime.now(),
               selectedDate: _billingDate,
               onDateSelected: (date) => setState(() => _billingDate = date),
             ),

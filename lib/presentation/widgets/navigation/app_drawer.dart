@@ -135,24 +135,31 @@ class AppDrawer extends StatelessWidget {
           _buildDrawerItem(
             context,
             index: 4,
-            icon: Icons.person,
-            title: 'Profile',
+            icon: Icons.subscriptions_outlined,
+            title: 'Subscriptions',
             isSelected: currentIndex == 4,
           ),
           _buildDrawerItem(
             context,
             index: 5,
+            icon: Icons.person,
+            title: 'Profile',
+            isSelected: currentIndex == 5,
+          ),
+          _buildDrawerItem(
+            context,
+            index: 6,
             icon: Icons.settings,
             title: 'Settings',
-            isSelected: currentIndex == 5,
+            isSelected: currentIndex == 6,
           ),
           if (Env.enviroment == 'DEV')
             _buildDrawerItem(
               context,
-              index: 6,
+              index: 7,
               icon: Icons.bug_report_outlined,
               title: 'Tests',
-              isSelected: currentIndex == 6,
+              isSelected: currentIndex == 7,
             ),
 
           const Spacer(),
