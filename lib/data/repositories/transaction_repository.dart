@@ -53,16 +53,14 @@ class TransactionRepository {
 
   Future<Transaction> updateTransaction(Transaction transaction) async {
      // Nota: Manejar cambio de balance en update es complejo, simplificado aquí
-    final updatedTransaction = transaction.incrementVersion();
-
     await _localDb.update(
       'transactions',
-      updatedTransaction.toLocal(),
+      transaction.toLocal(),
       where: 'id = ?',
       whereArgs: [transaction.id],
     );
 
-    return updatedTransaction;
+    return transaction;
   }
 
   Future<bool> deleteTransaction(String id) async {

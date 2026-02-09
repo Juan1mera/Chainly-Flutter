@@ -21,16 +21,14 @@ class CategoryRepository {
   }
 
   Future<Category> updateCategory(Category category) async {
-    final updatedCategory = category.incrementVersion();
-
     await _localDb.update(
       'categories',
-      updatedCategory.toLocal(),
+      category.toLocal(),
       where: 'id = ?',
       whereArgs: [category.id],
     );
 
-    return updatedCategory;
+    return category;
   }
 
   Future<bool> deleteCategory(String id) async {

@@ -13,9 +13,7 @@ class Wallet {
   final String type; // 'bank' | 'cash'
   final DateTime createdAt;
   final DateTime updatedAt;
-  final int version; 
   final IconData? iconBank;
-  final bool isSynced;
 
   const Wallet({
     required this.id,
@@ -29,9 +27,7 @@ class Wallet {
     required this.type,
     required this.createdAt,
     required this.updatedAt,
-    this.version = 1,
     this.iconBank,
-    this.isSynced = false,
   });
 
   factory Wallet.create({
@@ -58,28 +54,6 @@ class Wallet {
     );
   }
 
-  // Desde Supabase (snake_case)
-  factory Wallet.fromSupabase(Map<String, dynamic> map) {
-    return Wallet(
-      id: map['id'] as String,
-      userId: map['user_id'] as String,
-      name: map['name'] as String,
-      color: map['color'] as String,
-      currency: map['currency'] as String,
-      balance: (map['balance'] as num).toDouble(),
-      isFavorite: map['is_favorite'] as bool? ?? false,
-      isArchived: map['is_archived'] as bool? ?? false,
-      type: map['type'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      updatedAt: DateTime.parse(map['updated_at'] as String),
-      version: map['version'] as int? ?? 1,
-      iconBank: map['icon_bank'] != null
-          ? IconData(map['icon_bank'] as int, fontFamily: 'MaterialIcons')
-          : null,
-      isSynced: true, // Viene de Supabase, está sincronizado
-    );
-  }
-
   // Desde SQLite local (snake_case)
   factory Wallet.fromLocal(Map<String, dynamic> map) {
     return Wallet(
@@ -94,31 +68,10 @@ class Wallet {
       type: map['type'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
-      version: map['version'] as int? ?? 1,
       iconBank: map['icon_bank'] != null
           ? IconData(map['icon_bank'] as int, fontFamily: 'MaterialIcons')
           : null,
-      isSynced: (map['is_synced'] as int) == 1,
     );
-  }
-
-  // Para enviar a Supabase
-  Map<String, dynamic> toSupabase() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'name': name,
-      'color': color,
-      'currency': currency,
-      'balance': balance,
-      'is_favorite': isFavorite,
-      'is_archived': isArchived,
-      'type': type,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      'version': version,
-      'icon_bank': iconBank?.codePoint,
-    };
   }
 
   // Para guardar en SQLite local
@@ -135,9 +88,7 @@ class Wallet {
       'type': type,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
-      'version': version,
       'icon_bank': iconBank?.codePoint,
-      'is_synced': isSynced ? 1 : 0,
     };
   }
 
@@ -153,9 +104,7 @@ class Wallet {
     String? type,
     DateTime? createdAt,
     DateTime? updatedAt,
-    int? version,
     IconData? iconBank,
-    bool? isSynced,
   }) {
     return Wallet(
       id: id ?? this.id,
@@ -169,23 +118,9 @@ class Wallet {
       type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      version: version ?? this.version,
       iconBank: iconBank ?? this.iconBank,
-      isSynced: isSynced ?? this.isSynced,
     );
   }
-
-  // Marca como sincronizado
-  Wallet markAsSynced() => copyWith(isSynced: true);
-
-  // Marca como no sincronizado
-  Wallet markAsUnsynced() => copyWith(isSynced: false);
-
-  // Incrementa versión para actualizaciones
-  Wallet incrementVersion() => copyWith(
-        version: version + 1,
-        updatedAt: DateTime.now(),
-      );
 
   @override
   bool operator ==(Object other) =>
@@ -197,7 +132,7 @@ class Wallet {
 
   @override
   String toString() =>
-      'Wallet{id: $id, name: $name, balance: $balance, currency: $currency, synced: $isSynced}';
+      'Wallet{id: $id, name: $name, balance: $balance, currency: $currency}';
 
   // Generador de UUID estándar
   static String _generateUuid() {

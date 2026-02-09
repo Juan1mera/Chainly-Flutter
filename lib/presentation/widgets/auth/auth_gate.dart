@@ -20,33 +20,13 @@ class AuthGate extends StatelessWidget {
 
         final session = snapshot.data?.session;
 
-        // Si hay sesian activa en Supabase
+        // Si hay sesión activa en Supabase
         if (session != null) {
-          // Guardamos el usuario localmente como respaldo
-          AuthService.saveLocalUser(session.user);
           return const MainDrawerNav();
         }
 
-        // Si no hay sesion (o expira y no hay internet), verificamos respaldo local
-        return FutureBuilder<User?>(
-          future: AuthService.tryRestoreLocalUser(),
-          builder: (context, localSnapshot) {
-            if (localSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            final localUser = localSnapshot.data;
-            if (localUser != null) {
-              // Permitimos acceso offline
-              return const MainDrawerNav();
-            }
-
-            // Si no hay ni sesan online ni respaldo local -> Welcome
-            return const WelcomeScreen();
-          },
-        );
+        // Si no hay sesión -> Welcome
+        return const WelcomeScreen();
       },
     );
   }

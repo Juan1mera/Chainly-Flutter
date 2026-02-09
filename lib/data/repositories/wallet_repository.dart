@@ -42,16 +42,14 @@ class WalletRepository {
 
   // Actualiza una wallet solo en local
   Future<Wallet> updateWallet(Wallet wallet) async {
-    final updatedWallet = wallet.incrementVersion();
-
     await _localDb.update(
       'wallets',
-      updatedWallet.toLocal(),
+      wallet.toLocal(),
       where: 'id = ?',
       whereArgs: [wallet.id],
     );
 
-    return updatedWallet;
+    return wallet;
   }
 
   // Elimina una wallet solo de local

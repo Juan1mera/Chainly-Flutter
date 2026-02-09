@@ -9,7 +9,6 @@ import 'package:chainly/presentation/pages/main/wallets_screen/wallets_screen.da
 import 'package:chainly/presentation/pages/main/stats_screen/stats_screen.dart';
 import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.dart';
 import 'package:chainly/presentation/widgets/navigation/app_drawer.dart';
-import 'package:chainly/domain/providers/sync_provider.dart';
 import 'package:chainly/core/database/env.dart';
 import 'package:chainly/presentation/pages/tests_page.dart';
 
@@ -36,10 +35,6 @@ class _MainDrawerNavState extends ConsumerState<MainDrawerNav> {
   @override
   void initState() {
     super.initState();
-    // Trigger sync when app enters the main navigation (logged in)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(syncProvider).syncAll();
-    });
   }
 
   void _onItemTapped(int index) {

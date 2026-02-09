@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/rendering.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,79 +29,9 @@ class Db {
       onUpgrade: _onUpgrade,
     );
     
-    // Run data fix for any bad IDs (legacy text vs UUID)
-    await _fixInvalidCategoryIds(db);
-    
     return db;
   }
   
-  Future<void> _fixInvalidCategoryIds(Database db) async {
-    try {
-      // 1. Find categories with invalid IDs (starting with 'category_')
-      final List<Map<String, dynamic>> badCategories = await db.query(
-        'categories',
-        where: "id LIKE 'category_%'",
-      );
-
-      if (badCategories.isEmpty) return;
-      
-      // print('Migrating ${badCategories.length} categories with invalid IDs...');
-
-      for (final cat in badCategories) {
-        final oldId = cat['id'] as String;
-        final newId = const Uuid().v4();
-        
-        // 2. Clear pending operations for this bad ID to avoid sync errors
-        // We delete them because they contain the bad ID in the payload
-        await db.delete(
-          'pending_operations',
-          where: "record_id = ?",
-          whereArgs: [oldId],
-        );
-
-        // 3. Update the Category with new UUID
-        // We ensure it's marked as NOT synced so it tries to push to Supabase again (with new ID)
-        await db.update(
-          'categories',
-          {'id': newId, 'is_synced': 0}, 
-          where: 'id = ?',
-          whereArgs: [oldId],
-        );
-
-        // 4. Update any Transactions referencing this old Category ID
-        await db.update(
-          'transactions',
-          {'category_id': newId}, // Transactions remain unsynced/synced status, but ID is fixed
-          where: 'category_id = ?',
-          whereArgs: [oldId],
-        );
-        
-        // Also clear pending operations for transactions referencing this bad ID
-        // This is drastic but necessary as the payloads in pending_ops have the old FK
-        final pendingTxns = await db.query(
-            'pending_operations', 
-            where: "table_name = 'transactions' AND data LIKE ?", 
-            whereArgs: ['%$oldId%']
-        );
-        
-        for (final op in pendingTxns) {
-           await db.delete('pending_operations', where: 'id = ?', whereArgs: [op['id']]);
-           // Note: The transaction record itself in 'transactions' table was updated above.
-           // Next time sync runs, it might not pick it up if we don't mark it unsynced?
-           // Ideally we should mark affected transactions as is_synced=0
-           await db.update(
-             'transactions',
-             {'is_synced': 0},
-             where: 'category_id = ?',
-             whereArgs: [newId]
-           );
-        }
-      }
-      // print('Migration of invalid IDs completed.');
-    } catch (e) {
-      debugPrint('Error during ID migration: $e');
-    }
-  }
 
   Future<void> _onCreate(Database db, int version) async {
     await _createTables(db);
@@ -114,7 +43,7 @@ class Db {
   }
 
   Future<void> _createTables(Database db) async {
-    // Tabla de wallets actualizada
+    // Tabla de wallets
     await db.execute('''
       CREATE TABLE wallets(
         id TEXT PRIMARY KEY,
@@ -128,13 +57,11 @@ class Db {
         type TEXT NOT NULL CHECK(type IN ('bank', 'cash')),
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1,
-        icon_bank TEXT,
-        is_synced INTEGER NOT NULL DEFAULT 0
+        icon_bank TEXT
       )
     ''');
 
-    // Tabla de categorías actualizada
+    // Tabla de categorías
     await db.execute('''
       CREATE TABLE categories(
         id TEXT PRIMARY KEY,
@@ -146,13 +73,11 @@ class Db {
         type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1,
-        is_synced INTEGER NOT NULL DEFAULT 0,
         UNIQUE(user_id, name)
       )
     ''');
 
-    // Tabla de transacciones actualizada
+    // Tabla de transacciones
     await db.execute('''
       CREATE TABLE transactions(
         id TEXT PRIMARY KEY,
@@ -165,38 +90,53 @@ class Db {
         category_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1,
-        is_synced INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
         FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
       )
     ''');
 
-    // Tabla de operaciones pendientes para sincronización
+    // Tabla de suscripciones
     await db.execute('''
-      CREATE TABLE pending_operations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        operation_type TEXT NOT NULL,
-        table_name TEXT NOT NULL,
-        record_id TEXT NOT NULL,
-        data TEXT NOT NULL,
+      CREATE TABLE subscriptions(
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        amount REAL NOT NULL,
+        favicon TEXT,
         created_at TEXT NOT NULL,
-        retry_count INTEGER NOT NULL DEFAULT 0
+        billing_date TEXT NOT NULL,
+        wallet_id TEXT NOT NULL,
+        category_id TEXT,
+        currency TEXT NOT NULL,
+        FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
       )
     ''');
 
-    // Insertar categoría por defecto
+    // Insertar categorías por defecto
+    final now = DateTime.now().toIso8601String();
+    
     await db.insert('categories', {
-      'id': 'default_category',
+      'id': Uuid().v4(),
       'name': 'Sin categoría',
       'monthly_budget': 0.0,
       'user_id': 'system',
       'type': 'expense',
       'color': '#9E9E9E',
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-      'version': 1,
-      'is_synced': 1,
+      'created_at': now,
+      'updated_at': now,
+    });
+
+    await db.insert('categories', {
+      'id': 'subscriptions_category',
+      'name': 'Subscriptions',
+      'monthly_budget': 0.0,
+      'user_id': 'system',
+      'type': 'expense',
+      'color': '#6200EE', 
+      'created_at': now,
+      'updated_at': now,
     });
   }
 
@@ -207,24 +147,21 @@ class Db {
     await db.execute('CREATE INDEX idx_wallets_is_archived ON wallets(is_archived)');
     await db.execute('CREATE INDEX idx_wallets_type ON wallets(type)');
     await db.execute('CREATE INDEX idx_wallets_created_at ON wallets(created_at)');
-    await db.execute('CREATE INDEX idx_wallets_is_synced ON wallets(is_synced)');
 
     // Índices para categorías
     await db.execute('CREATE INDEX idx_categories_user ON categories(user_id)');
     await db.execute('CREATE INDEX idx_categories_name ON categories(name)');
     await db.execute('CREATE INDEX idx_categories_type ON categories(type)');
-    await db.execute('CREATE INDEX idx_categories_is_synced ON categories(is_synced)');
 
     // Índices para transacciones
     await db.execute('CREATE INDEX idx_transactions_wallet ON transactions(wallet_id)');
     await db.execute('CREATE INDEX idx_transactions_type ON transactions(type)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_transactions_category ON transactions(category_id)');
-    await db.execute('CREATE INDEX idx_transactions_is_synced ON transactions(is_synced)');
 
-    // Índice para operaciones pendientes
-    await db.execute('CREATE INDEX idx_pending_operations_table ON pending_operations(table_name)');
-    await db.execute('CREATE INDEX idx_pending_operations_created ON pending_operations(created_at)');
+    // Índices para suscripciones
+    await db.execute('CREATE INDEX idx_subscriptions_user ON subscriptions(user_id)');
+    await db.execute('CREATE INDEX idx_subscriptions_wallet ON subscriptions(wallet_id)');
   }
 
   // Métodos genéricos para operaciones CRUD
@@ -269,55 +206,13 @@ class Db {
     return await db.delete(table, where: where, whereArgs: whereArgs);
   }
 
-  // Métodos para operaciones pendientes
-  Future<void> addPendingOperation({
-    required String operationType,
-    required String tableName,
-    required String recordId,
-    required String data,
-  }) async {
-    final db = await database;
-    await db.insert('pending_operations', {
-      'operation_type': operationType,
-      'table_name': tableName,
-      'record_id': recordId,
-      'data': data,
-      'created_at': DateTime.now().toIso8601String(),
-      'retry_count': 0,
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getPendingOperations() async {
-    final db = await database;
-    return await db.query('pending_operations', orderBy: 'created_at ASC');
-  }
-
-  Future<void> removePendingOperation(int id) async {
-    final db = await database;
-    await db.delete('pending_operations', where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<void> incrementRetryCount(int id) async {
-    final db = await database;
-    await db.rawUpdate(
-      'UPDATE pending_operations SET retry_count = retry_count + 1 WHERE id = ?',
-      [id],
-    );
-  }
-
-  // Obtener registros no sincronizados
-  Future<List<Map<String, dynamic>>> getUnsyncedRecords(String table) async {
-    final db = await database;
-    return await db.query(table, where: 'is_synced = 0');
-  }
-
   // Limpiar todos los datos (útil al cerrar sesión)
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete('wallets');
     await db.delete('transactions');
-    await db.delete('categories', where: "id != 'default_category'");
-    await db.delete('pending_operations');
+    await db.delete('categories', where: "id NOT IN ('default_category', 'subscriptions_category')");
+    await db.delete('subscriptions');
   }
 
   // Cerrar la base de datos

@@ -93,7 +93,6 @@ class CategoryNotifier extends StateNotifier<AsyncValue<void>> {
         color: color,
         createdAt: DateTime.now(), 
         updatedAt: DateTime.now(),
-        isSynced: false,
       );
       
       await _repository.updateCategory(category);
