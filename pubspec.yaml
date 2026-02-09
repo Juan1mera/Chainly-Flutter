@@ -64,6 +64,7 @@ dependencies:
   # Utilidades
   uuid: ^4.2.1  # Para generar UUIDs
   skeletonizer: ^2.1.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
