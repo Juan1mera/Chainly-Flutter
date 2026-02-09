@@ -65,6 +65,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
       _ref.invalidate(transactionsByWalletProvider(walletId));
       _ref.invalidate(walletsProvider); 
       _ref.invalidate(walletByIdProvider(walletId)); 
+      _ref.invalidate(recentTransactionsProvider);
 
       return created;
     } catch (e, st) {

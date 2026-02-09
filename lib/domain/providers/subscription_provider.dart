@@ -161,6 +161,8 @@ class SubscriptionNotifier extends StateNotifier<AsyncValue<void>> {
       state = const AsyncValue.data(null);
       _ref.invalidate(subscriptionsProvider);
       _ref.invalidate(walletsProvider);
+      _ref.invalidate(walletByIdProvider(subscription.walletId));
+      _ref.invalidate(recentTransactionsProvider);
       
       return true;
     } catch (e, st) {
