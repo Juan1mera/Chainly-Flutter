@@ -1,3 +1,4 @@
+import 'package:chainly/domain/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -7,6 +8,7 @@ import 'package:chainly/data/models/wallet_model.dart';
 import 'package:chainly/data/models/transaction_with_details.dart';
 import 'package:chainly/presentation/pages/main/home_screen/components/transactions_home_section.dart';
 import 'package:chainly/presentation/pages/main/home_screen/components/wallets_home_section.dart';
+import 'package:chainly/presentation/pages/main/home_screen/components/subscriptions_home_section.dart';
 import 'package:chainly/domain/providers/wallet_provider.dart';
 import 'package:chainly/domain/providers/category_provider.dart';
 import 'package:chainly/domain/providers/transaction_provider.dart';
@@ -123,6 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.invalidate(walletsProvider);
         ref.invalidate(categoriesProvider);
         ref.invalidate(recentTransactionsProvider);
+        ref.invalidate(subscriptionsProvider);
       },
       child: Skeletonizer(
         enabled: isLoading,
@@ -151,6 +154,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             WalletsHomeSection(wallets: wallets),
 
             const SizedBox(height: 24),
+
+            // Subscriptions Section
+            const SubscriptionsHomeSection(),
+
+            const SizedBox(height: 12),
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
