@@ -82,7 +82,7 @@ class CustomSelectState<T> extends State<CustomSelect<T>> with TickerProviderSta
     setState(() => _isOpen = true);
     _animationController.forward();
     _overlayEntry = _createOverlayEntry();
-    Overlay.of(context).insert(_overlayEntry!);
+    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
   }
 
   void _closeDropdown() {
@@ -98,66 +98,87 @@ class CustomSelectState<T> extends State<CustomSelect<T>> with TickerProviderSta
     final baseColor = _effectiveColor;
 
     return OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx + 16,
-        top: offset.dy + size.height + 4,
-        width: size.width - 32,
-        child: Material(
-          elevation: 0,
-          color: AppColors.white,
-          child: Container(
-            constraints: const BoxConstraints(maxHeight: 200),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              border: Border.all(color: baseColor.withValues(alpha: 0.3), width: 1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: widget.items.length,
-              itemBuilder: (context, index) {
-                final item = widget.items[index];
-                final isSelected = widget.selectedItem == item;
-
-                return InkWell(
-                  onTap: () {
-                    widget.onChanged(item); 
-                    _closeDropdown();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected ? baseColor.withValues(alpha: 0.2) : null,
-                      borderRadius: index == 0
-                          ? const BorderRadius.vertical(top: Radius.circular(10))
-                          : index == widget.items.length - 1
-                              ? const BorderRadius.vertical(bottom: Radius.circular(10))
-                              : null,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.getDisplayText(item),
-                            style: TextStyle(
-                              color: isSelected ? AppColors.black : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              fontSize: 16,
-                              fontFamily: AppFonts.clashDisplay
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(Icons.check, color: baseColor, size: 20),
-                      ],
-                    ),
-                  ),
-                );
-              },
+      builder: (context) => Stack(
+        children: [
+          // Capa para cerrar al tocar fuera
+          GestureDetector(
+            onTap: _closeDropdown,
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              color: Colors.transparent,
+              width: double.infinity,
+              height: double.infinity,
             ),
           ),
-        ),
+          // Usar Positioned con coordenadas absolutas en lugar de CompositedTransformFollower
+          // cuando estamos en rootOverlay
+          Positioned(
+            left: offset.dx,
+            top: offset.dy + size.height + 4,
+            width: size.width,
+            child: Material(
+              elevation: 8,
+              color: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 250),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  border: Border.all(color: baseColor.withValues(alpha: 0.3), width: 1),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: widget.items.length,
+                    itemBuilder: (context, index) {
+                      final item = widget.items[index];
+                      final isSelected = widget.selectedItem == item;
+
+                      return InkWell(
+                        onTap: () {
+                          widget.onChanged(item); 
+                          _closeDropdown();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? baseColor.withValues(alpha: 0.2) : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.getDisplayText(item),
+                                  style: TextStyle(
+                                    color: isSelected ? AppColors.black : Colors.black87,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    fontSize: 16,
+                                    fontFamily: AppFonts.clashDisplay
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(Icons.check, color: baseColor, size: 20),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -166,61 +187,80 @@ class CustomSelectState<T> extends State<CustomSelect<T>> with TickerProviderSta
   Widget build(BuildContext context) {
     final baseColor = _effectiveColor;
 
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(width: 2, color: AppColors.black)
-              ),
-              child: InkWell(
-                onTap: _toggleDropdown,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: _effectiveIcon != null ? 8 : 16,
-                    right: 16,
-                    top: 16,
-                    bottom: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      if (_effectiveIcon != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 12, right: 8),
-                          child: Icon(_effectiveIcon, color: baseColor, size: 24),
-                        ),
-                      Expanded(
-                        child: Text(
-                          widget.selectedItem != null
-                              ? widget.getDisplayText(widget.selectedItem as T)
-                              : widget.hintText ?? widget.label,
-                          style: TextStyle(
-                            color: widget.selectedItem != null ? AppColors.black : baseColor,
-                            fontSize: widget.selectedItem != null ? 16 : 14,
-                            fontWeight: widget.selectedItem != null ? FontWeight.w500 : FontWeight.w400,
-                            fontFamily: AppFonts.clashDisplay
-                          ),
-                        ),
-                      ),
-                      AnimatedRotation(
-                        turns: _isOpen ? 0.5 : 0.0,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(Icons.keyboard_arrow_down, color: baseColor, size: 24),
-                      ),
-                    ],
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              widget.label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.clashDisplay,
+                color: AppColors.black,
               ),
             ),
-          );
-        },
-      ),
+          ),
+        ],
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: AnimatedBuilder(
+            animation: _scaleAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(width: 2, color: AppColors.black)
+                  ),
+                  child: InkWell(
+                    onTap: _toggleDropdown,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: _effectiveIcon != null ? 8 : 16,
+                        right: 16,
+                        top: 16,
+                        bottom: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          if (_effectiveIcon != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, right: 8),
+                              child: Icon(_effectiveIcon, color: baseColor, size: 24),
+                            ),
+                          Expanded(
+                            child: Text(
+                              widget.selectedItem != null
+                                  ? widget.getDisplayText(widget.selectedItem as T)
+                                  : widget.hintText ?? widget.label,
+                              style: TextStyle(
+                                color: widget.selectedItem != null ? AppColors.black : baseColor.withValues(alpha: 0.5),
+                                fontSize: widget.selectedItem != null ? 16 : 14,
+                                fontWeight: widget.selectedItem != null ? FontWeight.w500 : FontWeight.w400,
+                                fontFamily: AppFonts.clashDisplay
+                              ),
+                            ),
+                          ),
+                          AnimatedRotation(
+                            turns: _isOpen ? 0.5 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: Icon(Icons.keyboard_arrow_down, color: baseColor, size: 24),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -16,7 +16,7 @@ class CustomTextField extends StatefulWidget {
 
   const CustomTextField({
     super.key,
-    this.label = '',
+    this.label,
     this.onChanged,
     this.color,
     this.icon,
@@ -75,6 +75,20 @@ class CustomTextFieldState extends State<CustomTextField>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.label != null && widget.label!.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              widget.label!,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.clashDisplay,
+                color: AppColors.black,
+              ),
+            ),
+          ),
+        ],
         // === CAMPO DE TEXTO CON ANIMACIÓN ===
         AnimatedBuilder(
           animation: _scaleAnimation,
@@ -100,9 +114,9 @@ class CustomTextFieldState extends State<CustomTextField>
                     fontFamily: AppFonts.clashDisplay
                   ),
                   decoration: InputDecoration(
-                    hintText: widget.hintText ?? widget.label,
+                    hintText: widget.hintText ?? widget.label ?? '',
                     hintStyle: TextStyle(
-                      color: baseColor,
+                      color: baseColor.withValues(alpha: 0.5),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
