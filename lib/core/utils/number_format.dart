@@ -23,5 +23,5 @@ String formatAmount(double amount) {
     (match) => '${match.group(1)},',
   );
 
-  return formatted;
+  return amount < 0 ? '-$formatted' : formatted;
 }
