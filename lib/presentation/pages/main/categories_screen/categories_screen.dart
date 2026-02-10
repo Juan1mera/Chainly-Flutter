@@ -126,7 +126,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             // Espacio superior + botón
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 100, 24, 20), 
+                padding: const EdgeInsets.fromLTRB(24, 140, 24, 20), 
                 child: CustomButton(
                   text: "Nueva categoría",
                   onPressed: () => _showCategoryDialog(),

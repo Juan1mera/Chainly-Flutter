@@ -17,7 +17,6 @@ class TransactionsHomeSection extends StatelessWidget {
 
   User? get _user => Supabase.instance.client.auth.currentUser;
 
-
   const TransactionsHomeSection({
     super.key,
     required this.transactions,
@@ -64,7 +63,7 @@ class TransactionsHomeSection extends StatelessWidget {
                 type: transaction.transaction.type,
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
-              ); 
+              );
 
           final rotation = (index % 2 == 0) ? -0.08 : 0.08;
 
@@ -104,15 +103,18 @@ class TransactionsHomeSection extends StatelessWidget {
     }
 
     Widget getIconWidget() {
-      if (transaction.store != null && transaction.store!.website != null && transaction.store!.website!.isNotEmpty) {
+      if (transaction.store != null &&
+          transaction.store!.website != null &&
+          transaction.store!.website!.isNotEmpty) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(50), 
+          borderRadius: BorderRadius.circular(50),
           child: Image.network(
             FaviconGetter.getFaviconUrl(transaction.store!.website!),
             width: 24,
             height: 24,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Icon(getIcon(), color: AppColors.black, size: 24),
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(getIcon(), color: AppColors.black, size: 24),
           ),
         );
       }
@@ -181,10 +183,14 @@ class TransactionsHomeSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                       category.name,
-                       style: TextStyle(fontSize: 10, color: Colors.grey[700], fontWeight: FontWeight.bold),
-                       maxLines: 1,
-                       overflow: TextOverflow.ellipsis,
+                      category.name,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.greyDark,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${transaction.transaction.date.day}/${transaction.transaction.date.month}',
