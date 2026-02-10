@@ -1,4 +1,4 @@
-import 'package:chainly/data/models/store_model.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';

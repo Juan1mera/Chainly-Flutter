@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
 import 'package:chainly/core/utils/favicon_getter.dart';
@@ -6,7 +9,7 @@ import 'package:chainly/core/utils/number_format.dart';
 import 'package:chainly/data/models/subscription_model.dart';
 import 'package:intl/intl.dart';
 
-class SubscriptionCard extends StatelessWidget {
+class SubscriptionCard extends ConsumerWidget {
   final Subscription subscription;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -19,7 +22,21 @@ class SubscriptionCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Obtener lista de stores
+    //    Podemos usar watch para que se actualice si cambia algo en stores
+    final storesAsync = ref.watch(storesProvider);
+    final stores = storesAsync.asData?.value ?? [];
+    
+    // 2. Buscar store asociada
+    final store = stores.firstWhereOrNull((s) => s.id == subscription.storeId);
+    
+    // 3. Determinar URL del favicon
+    String? faviconUrl;
+    if (store?.website != null && store!.website!.isNotEmpty) {
+      faviconUrl = FaviconGetter.getFaviconUrl(store.website!);
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -43,13 +60,13 @@ class SubscriptionCard extends StatelessWidget {
               color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: (subscription.favicon != null && subscription.favicon!.isNotEmpty)
+            child: (faviconUrl != null)
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Image.network(
-                        FaviconGetter.getFaviconUrl(subscription.favicon!),
+                        faviconUrl,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.subscriptions_outlined, color: AppColors.purple),

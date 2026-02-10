@@ -6,7 +6,6 @@ class Subscription {
   final String title;
   final String? description;
   final double amount;
-  final String? favicon;
   final DateTime createdAt;
   final DateTime billingDate;
   final String walletId;
@@ -20,7 +19,6 @@ class Subscription {
     required this.title,
     this.description,
     required this.amount,
-    this.favicon,
     required this.createdAt,
     required this.billingDate,
     required this.walletId,
@@ -34,7 +32,6 @@ class Subscription {
     required String title,
     String? description,
     required double amount,
-    String? favicon,
     required DateTime billingDate,
     required String walletId,
     String? categoryId,
@@ -47,7 +44,6 @@ class Subscription {
       title: title,
       description: description,
       amount: amount,
-      favicon: favicon,
       createdAt: DateTime.now(),
       billingDate: billingDate,
       walletId: walletId,
@@ -64,7 +60,6 @@ class Subscription {
       title: map['title'] as String,
       description: map['description'] as String?,
       amount: (map['amount'] as num).toDouble(),
-      favicon: map['favicon'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       billingDate: DateTime.parse(map['billing_date'] as String),
       walletId: map['wallet_id'] as String,
@@ -81,7 +76,6 @@ class Subscription {
       'title': title,
       'description': description,
       'amount': amount,
-      'favicon': favicon,
       'created_at': createdAt.toIso8601String(),
       'billing_date': billingDate.toIso8601String(),
       'wallet_id': walletId,
@@ -97,7 +91,6 @@ class Subscription {
     String? title,
     String? description,
     double? amount,
-    String? favicon,
     DateTime? createdAt,
     DateTime? billingDate,
     String? walletId,
@@ -111,7 +104,6 @@ class Subscription {
       title: title ?? this.title,
       description: description ?? this.description,
       amount: amount ?? this.amount,
-      favicon: favicon ?? this.favicon,
       createdAt: createdAt ?? this.createdAt,
       billingDate: billingDate ?? this.billingDate,
       walletId: walletId ?? this.walletId,

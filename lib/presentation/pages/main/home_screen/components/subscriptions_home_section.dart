@@ -8,6 +8,8 @@ import 'package:chainly/core/utils/number_format.dart';
 import 'package:chainly/data/models/subscription_model.dart';
 import 'package:chainly/domain/providers/subscription_provider.dart';
 import 'package:chainly/domain/providers/wallet_provider.dart';
+import 'package:collection/collection.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
 import 'package:intl/intl.dart';
 
 class SubscriptionsHomeSection extends ConsumerWidget {
@@ -190,6 +192,15 @@ class _SubscriptionDueItemState extends ConsumerState<_SubscriptionDueItem> {
 
   @override
   Widget build(BuildContext context) {
+    final storesAsync = ref.watch(storesProvider);
+    final stores = storesAsync.asData?.value ?? [];
+    final store = stores.firstWhereOrNull((s) => s.id == widget.subscription.storeId);
+    
+    String? faviconUrl;
+    if (store?.website != null && store!.website!.isNotEmpty) {
+      faviconUrl = FaviconGetter.getFaviconUrl(store.website!);
+    }
+
     return Container(
       width: 160,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
@@ -224,13 +235,13 @@ class _SubscriptionDueItemState extends ConsumerState<_SubscriptionDueItem> {
                           )
                         ]
                       ),
-                      child: (widget.subscription.favicon != null && widget.subscription.favicon!.isNotEmpty)
+                      child: (faviconUrl != null)
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
                                 padding: const EdgeInsets.all(6.0),
                                 child: Image.network(
-                                  FaviconGetter.getFaviconUrl(widget.subscription.favicon!),
+                                  faviconUrl,
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) =>
                                       const Icon(Icons.subscriptions_outlined, color: AppColors.purple, size: 20),

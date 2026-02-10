@@ -26,12 +26,12 @@ class SubscriptionEditSheet extends ConsumerStatefulWidget {
 class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  late TextEditingController _faviconController;
   late double _amount;
   late DateTime _billingDate;
   Wallet? _selectedWallet;
   Store? _selectedStore;
   bool _isEditing = false;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -39,8 +39,8 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
     _isEditing = widget.subscription != null;
     _titleController = TextEditingController(text: widget.subscription?.title ?? '');
     _descriptionController = TextEditingController(text: widget.subscription?.description ?? '');
-    _faviconController = TextEditingController(text: widget.subscription?.favicon ?? '');
     _amount = widget.subscription?.amount ?? 0.0;
+    
     final now = DateTime.now();
     _billingDate = widget.subscription?.billingDate ?? now;
     if (_billingDate.isBefore(DateTime(now.year, now.month, now.day))) {
@@ -52,7 +52,6 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _faviconController.dispose();
     super.dispose();
   }
 
@@ -67,7 +66,6 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
     final result = {
       'title': _titleController.text.trim(),
       'description': _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-      'favicon': _faviconController.text.trim().isEmpty ? null : _faviconController.text.trim(),
       'amount': _amount,
       'billingDate': _billingDate,
       'walletId': _selectedWallet!.id,
@@ -82,6 +80,44 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
   @override
   Widget build(BuildContext context) {
     final walletsAsync = ref.watch(walletsProvider(const WalletFilters(includeArchived: false)));
+    // We also need stores to be loaded to find the selectedStore object if editing
+    final storesAsync = ref.watch(storesProvider);
+
+    // Initialize selected items once data is available
+    if (!_initialized) {
+        if (walletsAsync.hasValue) {
+             final wallets = walletsAsync.value!;
+             if (_selectedWallet == null && wallets.isNotEmpty) {
+                if (_isEditing) {
+                   _selectedWallet = wallets.firstWhere(
+                      (w) => w.id == widget.subscription!.walletId,
+                      orElse: () => wallets.first
+                   );
+                } else {
+                   _selectedWallet = wallets.first;
+                }
+             }
+        }
+        
+        if (storesAsync.hasValue) {
+            final stores = storesAsync.value!;
+            if (_selectedStore == null && widget.subscription?.storeId != null && stores.isNotEmpty) {
+                 _selectedStore = stores.firstWhere(
+                    (s) => s.id == widget.subscription!.storeId,
+                    orElse: () => stores.first // Just safe fallback for lookup, check id next
+                 );
+                 if (_selectedStore?.id != widget.subscription!.storeId) {
+                    _selectedStore = null;
+                 }
+            }
+        }
+        
+        // Mark initialized only if we have at least tried to load data. 
+        // We can check if loading is done.
+        if (!walletsAsync.isLoading && !storesAsync.isLoading) {
+             _initialized = true; 
+        }
+    }
 
     return Container(
       padding: EdgeInsets.only(
@@ -115,25 +151,11 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
               hintText: 'Ej: Netflix, Spotify, Internet',
             ),
             const SizedBox(height: 16),
-            CustomTextField(
-              controller: _faviconController,
-              label: 'URL del Icono (Favicon)',
-              hintText: 'https://example.com/logo.png',
-            ),
-            const SizedBox(height: 16),
+            
+            // Wallet Selector
             walletsAsync.when(
               data: (wallets) {
-                if (_selectedWallet == null && wallets.isNotEmpty) {
-                  if (_isEditing) {
-                    _selectedWallet = wallets.firstWhere(
-                      (w) => w.id == widget.subscription!.walletId,
-                      orElse: () => wallets.first,
-                    );
-                  } else {
-                    _selectedWallet = wallets.first;
-                  }
-                }
-                return CustomSelect<Wallet>(
+                 return CustomSelect<Wallet>(
                   label: 'Billetera de pago',
                   items: wallets,
                   selectedItem: _selectedWallet,
@@ -141,28 +163,15 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
                   onChanged: (w) => setState(() => _selectedWallet = w),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Text('Error al cargar billeteras: $err'),
+               loading: () => const Center(child: CircularProgressIndicator()),
+               error: (err, _) => Text('Error al cargar billeteras: $err'),
             ),
+            
             const SizedBox(height: 16),
             
-            Consumer(builder: (context, ref, child) {
-              final storesAsync = ref.watch(storesProvider);
-              
-              return storesAsync.when(
+            // Store Selector
+            storesAsync.when(
                 data: (stores) {
-                  // Init selected store if editing and not set
-                  if (_selectedStore == null && widget.subscription?.storeId != null && stores.isNotEmpty) {
-                    _selectedStore = stores.firstWhere(
-                      (s) => s.id == widget.subscription!.storeId,
-                      orElse: () => stores.first, // Fallback? or null
-                    );
-                    // If orElse returns stores.first but ids don't match, we might imply it wasn't found.
-                    if (_selectedStore?.id != widget.subscription!.storeId) {
-                       _selectedStore = null; 
-                    }
-                  }
-
                   final newStoreAction = Store(
                     id: 'new_store_action',
                     userId: '',
@@ -192,26 +201,16 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
                          }
                       } else {
                         setState(() => _selectedStore = val);
-                        // Auto-fill favicon if store has website and favicon field is empty
-                        if (val != null && val.website != null && _faviconController.text.isEmpty) {
-                           // We don't have the explicit favicon URL here, but we could construct it or 
-                           // just leave it empty and let the card handle it via store.
-                           // But subscription model *has* a favicon field. 
-                           // Users might want to override it.
-                           // For now, let's not auto-fill to avoid confusion, or fill it with website?
-                           // Actually, Subscription model has favicon URL string. Store has website.
-                           // FaviconGetter gets url from website.
-                           // If we leave subscription favicon empty, can we fallback to store favicon?
-                           // Yes, if we update SubscriptionCard to look up store.
-                        }
                       }
                     },
                   );
                 },
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
-              );
-            }),
+            ),
+            const SizedBox(height: 16),
+            
+
             const SizedBox(height: 16),
             CustomNumberField(
               currency: _selectedWallet?.currency ?? 'USD',

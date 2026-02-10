@@ -31,10 +31,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     try {
       if (subscription != null) {
         // Edit
+        // Edit
         final updated = subscription.copyWith(
           title: result['title'],
           description: result['description'],
-          favicon: result['favicon'],
           amount: result['amount'],
           billingDate: result['billingDate'],
           walletId: result['walletId'],
@@ -48,7 +48,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
         await notifier.createSubscription(
           title: result['title'],
           description: result['description'],
-          favicon: result['favicon'],
           amount: result['amount'],
           billingDate: result['billingDate'],
           walletId: result['walletId'],
