@@ -63,6 +63,7 @@ class SubscriptionNotifier extends StateNotifier<AsyncValue<void>> {
     required String walletId,
     String? categoryId,
     required String currency,
+    String? storeId,
   }) async {
     final userId = _ref.read(currentUserIdProvider);
     if (userId == null) return null;
@@ -79,6 +80,7 @@ class SubscriptionNotifier extends StateNotifier<AsyncValue<void>> {
         billingDate: billingDate,
         walletId: walletId,
         categoryId: categoryId,
+        storeId: storeId,
         currency: currency,
       );
 
@@ -129,6 +131,7 @@ class SubscriptionNotifier extends StateNotifier<AsyncValue<void>> {
         type: 'expense',
         amount: subscription.amount,
         categoryId: subscription.categoryId ?? 'subscriptions_category',
+        storeId: subscription.storeId,
         note: 'Pago de suscripción: ${subscription.title}',
         date: DateTime.now(),
       );

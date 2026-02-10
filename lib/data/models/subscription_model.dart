@@ -11,6 +11,7 @@ class Subscription {
   final DateTime billingDate;
   final String walletId;
   final String? categoryId;
+  final String? storeId; // Nuevo campo
   final String currency;
 
   const Subscription({
@@ -24,6 +25,7 @@ class Subscription {
     required this.billingDate,
     required this.walletId,
     this.categoryId,
+    this.storeId,
     required this.currency,
   });
 
@@ -36,6 +38,7 @@ class Subscription {
     required DateTime billingDate,
     required String walletId,
     String? categoryId,
+    String? storeId,
     required String currency,
   }) {
     return Subscription(
@@ -49,6 +52,7 @@ class Subscription {
       billingDate: billingDate,
       walletId: walletId,
       categoryId: categoryId,
+      storeId: storeId,
       currency: currency,
     );
   }
@@ -65,6 +69,7 @@ class Subscription {
       billingDate: DateTime.parse(map['billing_date'] as String),
       walletId: map['wallet_id'] as String,
       categoryId: map['category_id'] as String?,
+      storeId: map['store_id'] as String?,
       currency: map['currency'] as String,
     );
   }
@@ -81,6 +86,7 @@ class Subscription {
       'billing_date': billingDate.toIso8601String(),
       'wallet_id': walletId,
       'category_id': categoryId,
+      'store_id': storeId,
       'currency': currency,
     };
   }
@@ -96,6 +102,7 @@ class Subscription {
     DateTime? billingDate,
     String? walletId,
     String? categoryId,
+    String? storeId,
     String? currency,
   }) {
     return Subscription(
@@ -109,6 +116,7 @@ class Subscription {
       billingDate: billingDate ?? this.billingDate,
       walletId: walletId ?? this.walletId,
       categoryId: categoryId ?? this.categoryId,
+      storeId: storeId ?? this.storeId,
       currency: currency ?? this.currency,
     );
   }

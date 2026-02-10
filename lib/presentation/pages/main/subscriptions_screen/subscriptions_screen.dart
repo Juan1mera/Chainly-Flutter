@@ -40,6 +40,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           walletId: result['walletId'],
           currency: result['currency'],
           categoryId: result['categoryId'],
+          storeId: result['storeId'],
         );
         await notifier.updateSubscription(updated);
       } else {
@@ -53,6 +54,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
           walletId: result['walletId'],
           categoryId: result['categoryId'],
           currency: result['currency'],
+          storeId: result['storeId'],
         );
       }
 

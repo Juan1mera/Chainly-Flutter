@@ -1,15 +1,17 @@
+import 'package:chainly/core/constants/fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.dart';
 
 class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
-  // Nuevo: lista opcional de ítems del menú
+  final String? title; // Nuevo: título opcional
   final List<PopupMenuEntry<dynamic>>? menuItems;
   final VoidCallback? onMenuSelected; // Opcional: si quieres una acción global
 
   const CustomHeader({
     super.key,
+    this.title,
     this.menuItems,
     this.onMenuSelected,
   });
@@ -31,13 +33,27 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Botón atrás
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 28,
-                  color: AppColors.black,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 28,
+                      color: AppColors.black,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  if (title != null)
+                     Text(
+                        title!,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppFonts.clashDisplay,
+                          color: AppColors.black,
+                        ),
+                     ),
+                ],
               ),
 
               // Área derecha: menú + avatar

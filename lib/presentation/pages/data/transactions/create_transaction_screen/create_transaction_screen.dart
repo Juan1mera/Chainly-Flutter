@@ -14,6 +14,10 @@ import 'package:chainly/domain/providers/wallet_provider.dart';
 import 'package:chainly/domain/providers/category_provider.dart';
 import 'package:chainly/domain/providers/transaction_provider.dart';
 
+import 'package:chainly/data/models/store_model.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
+import 'package:chainly/presentation/pages/main/stores_screen/add_edit_store_sheet.dart';
+
 class CreateTransactionScreen extends ConsumerStatefulWidget {
   final String? initialWalletId;
   final String? initialType;
@@ -37,6 +41,7 @@ class _CreateTransactionScreenState
   double _amount = 0.0;
   String? _selectedCategoryName;
   Wallet? _selectedWallet;
+  Store? _selectedStore;
 
   bool _hasSetInitialWallet = false;
 
@@ -113,6 +118,7 @@ class _CreateTransactionScreenState
         type: _type,
         amount: _amount,
         categoryId: category.id,
+        storeId: _selectedStore?.id,
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
@@ -136,6 +142,7 @@ class _CreateTransactionScreenState
   Widget build(BuildContext context) {
     final walletsAsync = ref.watch(walletsProvider(const WalletFilters(includeArchived: false)));
     final categoriesAsync = ref.watch(categoriesProvider);
+    final storesAsync = ref.watch(storesProvider);
 
     return Scaffold(
       body: walletsAsync.when(
@@ -176,67 +183,75 @@ class _CreateTransactionScreenState
                   _selectedCategoryName = categories.first.name;
                 }
                
-                return Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [AppColors.green, AppColors.yellow],
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-                    child: Column(
-                      children: [
-                        const CustomHeader(),
-
-                        if (_selectedWallet != null) ...[
-                          WalletMiniCard(wallet: _selectedWallet!),
-                          const SizedBox(height: 20),
-                        ],
-
-                        CustomSelect<Wallet>(
-                          items: availableWallets,
-                          selectedItem: _selectedWallet,
-                          getDisplayText: (wallet) =>
-                              '${wallet.name} • ${wallet.currency}',
-                          onChanged: (wallet) =>
-                              setState(() => _selectedWallet = wallet),
-                          label: '',
+                return storesAsync.when(
+                   loading: () => const Center(child: CircularProgressIndicator()), // Or loading indicator for stores specifically?
+                   error: (e, s) => Center(child: Text('Error al cargar tiendas: $e')),
+                   data: (stores) {
+                      return Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [AppColors.green, AppColors.yellow],
+                          ),
                         ),
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                          child: Column(
+                            children: [
+                              const CustomHeader(),
 
-                        const SizedBox(height: 24),
+                              if (_selectedWallet != null) ...[
+                                WalletMiniCard(wallet: _selectedWallet!),
+                                const SizedBox(height: 20),
+                              ],
 
-                        CustomNumberField(
-                          currency: _selectedWallet?.currency ?? 'USD',
-                          hintText: '0.00',
-                          onChanged: (val) => setState(() => _amount = val),
+                              CustomSelect<Wallet>(
+                                items: availableWallets,
+                                selectedItem: _selectedWallet,
+                                getDisplayText: (wallet) =>
+                                    '${wallet.name} • ${wallet.currency}',
+                                onChanged: (wallet) =>
+                                    setState(() => _selectedWallet = wallet),
+                                label: '',
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              CustomNumberField(
+                                currency: _selectedWallet?.currency ?? 'USD',
+                                hintText: '0.00',
+                                onChanged: (val) => setState(() => _amount = val),
+                              ),
+
+                              const SizedBox(height: 24),
+                              _buildCategorySelector(categories),
+                              const SizedBox(height: 24),
+                              _buildStoreSelector(stores),
+                              const SizedBox(height: 24),
+                              _buildTypeSelector(),
+                              const SizedBox(height: 24),
+
+                              CustomTextField(
+                                controller: _noteController,
+                                label: 'Nota (opcional)',
+                                hintText: 'Ej: Supermercado, salario, Netflix...',
+                                maxLines: 3,
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              CustomButton(
+                                text: 'Guardar transacción',
+                                onPressed: _isLoading ? null : _createTransaction,
+                                isLoading: _isLoading,
+                              ),
+                            ],
+                          ),
                         ),
-
-                        const SizedBox(height: 24),
-                        _buildCategorySelector(categories),
-                        const SizedBox(height: 24),
-                        _buildTypeSelector(),
-                        const SizedBox(height: 24),
-
-                        CustomTextField(
-                          controller: _noteController,
-                          label: 'Nota (opcional)',
-                          hintText: 'Ej: Supermercado, salario, Netflix...',
-                          maxLines: 3,
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        CustomButton(
-                          text: 'Guardar transacción',
-                          onPressed: _isLoading ? null : _createTransaction,
-                          isLoading: _isLoading,
-                        ),
-                      ],
-                    ),
-                  ),
+                      );
+                   }
                 );
              }
           );
@@ -298,6 +313,43 @@ class _CreateTransactionScreenState
           }
         } else {
           setState(() => _selectedCategoryName = val);
+        }
+      },
+    );
+  }
+
+  Widget _buildStoreSelector(List<Store> stores) {
+    final newStoreAction = Store(
+      id: 'new_store_action',
+      userId: '',
+      name: '＋ Nueva tienda...',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    final items = [newStoreAction, ...stores];
+
+    return CustomSelect<Store>(
+      label: '',
+      hintText: 'Seleccionar tienda (opcional)',
+      items: items,
+      selectedItem: _selectedStore,
+      getDisplayText: (store) => store.name,
+      onChanged: (val) async {
+        if (val?.id == 'new_store_action') {
+           // Navigate to add store
+           final result = await showModalBottomSheet<Store>(
+             context: context,
+             isScrollControlled: true,
+             backgroundColor: Colors.transparent,
+             builder: (_) => const AddEditStoreSheet(),
+           );
+           
+           if (result != null) {
+             setState(() => _selectedStore = result);
+           }
+        } else {
+          setState(() => _selectedStore = val);
         }
       },
     );

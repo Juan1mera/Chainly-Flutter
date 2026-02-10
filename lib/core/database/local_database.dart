@@ -24,7 +24,7 @@ class Db {
 
     final db = await openDatabase(
       path,
-      version: 1, 
+      version: 3, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -39,7 +39,29 @@ class Db {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    
+    if (oldVersion < 2) {
+      // Crear tabla stores
+      await db.execute('''
+        CREATE TABLE stores(
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          website TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+
+      // Agregar columna store_id a transacciones
+      await db.execute('ALTER TABLE transactions ADD COLUMN store_id TEXT');
+      await db.execute('CREATE INDEX idx_transactions_store ON transactions(store_id)');
+      await db.execute('CREATE INDEX idx_stores_user ON stores(user_id)');
+    }
+
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE subscriptions ADD COLUMN store_id TEXT');
+      await db.execute('CREATE INDEX idx_subscriptions_store ON subscriptions(store_id)');
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -77,6 +99,18 @@ class Db {
       )
     ''');
 
+    // Tabla de stores
+    await db.execute('''
+      CREATE TABLE stores(
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        website TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
     // Tabla de transacciones
     await db.execute('''
       CREATE TABLE transactions(
@@ -88,10 +122,12 @@ class Db {
         note TEXT,
         date TEXT NOT NULL,
         category_id TEXT,
+        store_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
+        FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE SET NULL
       )
     ''');
 
@@ -108,9 +144,11 @@ class Db {
         billing_date TEXT NOT NULL,
         wallet_id TEXT NOT NULL,
         category_id TEXT,
+        store_id TEXT,
         currency TEXT NOT NULL,
         FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
+        FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE SET NULL
       )
     ''');
 
@@ -153,15 +191,20 @@ class Db {
     await db.execute('CREATE INDEX idx_categories_name ON categories(name)');
     await db.execute('CREATE INDEX idx_categories_type ON categories(type)');
 
+    // Índices para stores
+    await db.execute('CREATE INDEX idx_stores_user ON stores(user_id)');
+
     // Índices para transacciones
     await db.execute('CREATE INDEX idx_transactions_wallet ON transactions(wallet_id)');
     await db.execute('CREATE INDEX idx_transactions_type ON transactions(type)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_transactions_category ON transactions(category_id)');
+    await db.execute('CREATE INDEX idx_transactions_store ON transactions(store_id)');
 
     // Índices para suscripciones
     await db.execute('CREATE INDEX idx_subscriptions_user ON subscriptions(user_id)');
     await db.execute('CREATE INDEX idx_subscriptions_wallet ON subscriptions(wallet_id)');
+    await db.execute('CREATE INDEX idx_subscriptions_store ON subscriptions(store_id)');
   }
 
   // Métodos genéricos para operaciones CRUD
@@ -213,6 +256,7 @@ class Db {
     await db.delete('transactions');
     await db.delete('categories', where: "id NOT IN ('default_category', 'subscriptions_category')");
     await db.delete('subscriptions');
+    await db.delete('stores');
   }
 
   // Cerrar la base de datos

@@ -41,6 +41,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
     required String type,
     required double amount,
     String? categoryId,
+    String? storeId,
     String? note,
     DateTime? date,
   }) async {
@@ -55,6 +56,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
         type: type,
         amount: amount,
         categoryId: categoryId,
+        storeId: storeId,
         note: note,
         date: date ?? DateTime.now(),
       );

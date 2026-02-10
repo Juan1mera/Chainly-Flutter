@@ -10,6 +10,9 @@ import 'package:chainly/presentation/widgets/ui/custom_text_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_number_field.dart';
 import 'package:chainly/presentation/widgets/ui/custom_select.dart';
 import 'package:chainly/presentation/widgets/ui/custom_date_picker.dart';
+import 'package:chainly/data/models/store_model.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
+import 'package:chainly/presentation/pages/main/stores_screen/add_edit_store_sheet.dart';
 
 class SubscriptionEditSheet extends ConsumerStatefulWidget {
   final Subscription? subscription;
@@ -27,6 +30,7 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
   late double _amount;
   late DateTime _billingDate;
   Wallet? _selectedWallet;
+  Store? _selectedStore;
   bool _isEditing = false;
 
   @override
@@ -69,6 +73,7 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
       'walletId': _selectedWallet!.id,
       'currency': _selectedWallet!.currency,
       'categoryId': 'subscriptions_category', // Default category for subscriptions
+      'storeId': _selectedStore?.id,
     };
 
     Navigator.pop(context, result);
@@ -139,6 +144,74 @@ class _SubscriptionEditSheetState extends ConsumerState<SubscriptionEditSheet> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Text('Error al cargar billeteras: $err'),
             ),
+            const SizedBox(height: 16),
+            
+            Consumer(builder: (context, ref, child) {
+              final storesAsync = ref.watch(storesProvider);
+              
+              return storesAsync.when(
+                data: (stores) {
+                  // Init selected store if editing and not set
+                  if (_selectedStore == null && widget.subscription?.storeId != null && stores.isNotEmpty) {
+                    _selectedStore = stores.firstWhere(
+                      (s) => s.id == widget.subscription!.storeId,
+                      orElse: () => stores.first, // Fallback? or null
+                    );
+                    // If orElse returns stores.first but ids don't match, we might imply it wasn't found.
+                    if (_selectedStore?.id != widget.subscription!.storeId) {
+                       _selectedStore = null; 
+                    }
+                  }
+
+                  final newStoreAction = Store(
+                    id: 'new_store_action',
+                    userId: '',
+                    name: '＋ Nueva tienda...',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  final items = [newStoreAction, ...stores];
+
+                  return CustomSelect<Store>(
+                    label: 'Tienda (Opcional)',
+                    hintText: 'Seleccionar tienda',
+                    items: items,
+                    selectedItem: _selectedStore,
+                    getDisplayText: (s) => s.name,
+                    onChanged: (val) async {
+                      if (val?.id == 'new_store_action') {
+                         final result = await showModalBottomSheet<Store>(
+                           context: context,
+                           isScrollControlled: true,
+                           backgroundColor: Colors.transparent,
+                           builder: (_) => const AddEditStoreSheet(),
+                         );
+                         if (result != null) {
+                           setState(() => _selectedStore = result);
+                         }
+                      } else {
+                        setState(() => _selectedStore = val);
+                        // Auto-fill favicon if store has website and favicon field is empty
+                        if (val != null && val.website != null && _faviconController.text.isEmpty) {
+                           // We don't have the explicit favicon URL here, but we could construct it or 
+                           // just leave it empty and let the card handle it via store.
+                           // But subscription model *has* a favicon field. 
+                           // Users might want to override it.
+                           // For now, let's not auto-fill to avoid confusion, or fill it with website?
+                           // Actually, Subscription model has favicon URL string. Store has website.
+                           // FaviconGetter gets url from website.
+                           // If we leave subscription favicon empty, can we fallback to store favicon?
+                           // Yes, if we update SubscriptionCard to look up store.
+                        }
+                      }
+                    },
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            }),
             const SizedBox(height: 16),
             CustomNumberField(
               currency: _selectedWallet?.currency ?? 'USD',

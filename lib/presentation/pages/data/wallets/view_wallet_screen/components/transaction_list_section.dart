@@ -1,13 +1,16 @@
+import 'package:chainly/data/models/store_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
 import 'package:chainly/data/models/transaction_model.dart';
 import 'package:chainly/data/models/category_model.dart';
 import 'package:chainly/presentation/widgets/common/transaction_card_simple.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class TransactionListSection extends StatelessWidget {
+class TransactionListSection extends ConsumerWidget {
   final List<Transaction> transactions;
   final List<Category> categories;
   final String currency;
@@ -56,7 +59,7 @@ class TransactionListSection extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (transactions.isEmpty) {
       return const SliverFillRemaining(
         hasScrollBody: false,
@@ -83,6 +86,9 @@ class TransactionListSection extends StatelessWidget {
         ),
       );
     }
+
+    final storesAsync = ref.watch(storesProvider);
+    final stores = storesAsync.asData?.value ?? [];
 
     final symbol = _getSymbol(currency);
     final grouped = groupBy(
@@ -135,6 +141,9 @@ class TransactionListSection extends StatelessWidget {
                       createdAt: DateTime.now(),
                       updatedAt: DateTime.now(),
                     );
+                
+                final store = stores.firstWhereOrNull((s) => s.id == t.storeId);
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -144,6 +153,7 @@ class TransactionListSection extends StatelessWidget {
                     key: ValueKey(t.id),
                     transaction: t,
                     category: category,
+                    store: store,
                     currencySymbol: symbol,
                   ),
                 );
@@ -155,3 +165,5 @@ class TransactionListSection extends StatelessWidget {
     );
   }
 }
+
+

@@ -5,6 +5,7 @@ class Transaction {
   final String userId;
   final String walletId;
   final String? categoryId;
+  final String? storeId;
   final String type; // 'income' | 'expense' | 'transfer'
   final double amount;
   final String? note;
@@ -17,6 +18,7 @@ class Transaction {
     required this.userId,
     required this.walletId,
     this.categoryId,
+    this.storeId,
     required this.type,
     required this.amount,
     this.note,
@@ -29,6 +31,7 @@ class Transaction {
     required String userId,
     required String walletId,
     String? categoryId,
+    String? storeId,
     required String type,
     required double amount,
     String? note,
@@ -40,6 +43,7 @@ class Transaction {
       userId: userId,
       walletId: walletId,
       categoryId: categoryId,
+      storeId: storeId,
       type: type,
       amount: amount,
       note: note,
@@ -54,6 +58,7 @@ class Transaction {
     required String userId,
     required String walletId,
     String? categoryId,
+    String? storeId,
     required String type,
     required double amount,
     String? note,
@@ -66,6 +71,7 @@ class Transaction {
       userId: userId,
       walletId: walletId,
       categoryId: categoryId,
+      storeId: storeId,
       type: type,
       amount: amount,
       note: note,
@@ -81,6 +87,7 @@ class Transaction {
       userId: map['user_id'] as String? ?? 'local_user', // Fallback for migration
       walletId: map['wallet_id'] as String,
       categoryId: map['category_id'] as String?,
+      storeId: map['store_id'] as String?,
       type: map['type'] as String,
       amount: (map['amount'] as num).toDouble(),
       note: map['note'] as String?,
@@ -96,6 +103,7 @@ class Transaction {
       'user_id': userId,
       'wallet_id': walletId,
       'category_id': categoryId,
+      'store_id': storeId,
       'type': type,
       'amount': amount,
       'note': note,
@@ -110,6 +118,7 @@ class Transaction {
     String? userId,
     String? walletId,
     String? categoryId,
+    String? storeId,
     String? type,
     double? amount,
     String? note,
@@ -122,6 +131,7 @@ class Transaction {
       userId: userId ?? this.userId,
       walletId: walletId ?? this.walletId,
       categoryId: categoryId ?? this.categoryId,
+      storeId: storeId ?? this.storeId,
       type: type ?? this.type,
       amount: amount ?? this.amount,
       note: note ?? this.note,
@@ -145,5 +155,5 @@ class Transaction {
 
   @override
   String toString() =>
-      'Transaction{id: $id, walletId: $walletId, categoryId: $categoryId, type: $type, amount: $amount}';
+      'Transaction{id: $id, walletId: $walletId, categoryId: $categoryId, storeId: $storeId, type: $type, amount: $amount}';
 }

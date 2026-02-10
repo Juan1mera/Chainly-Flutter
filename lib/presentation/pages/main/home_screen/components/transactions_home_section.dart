@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:chainly/core/constants/colors.dart';
 import 'package:chainly/core/constants/fonts.dart';
+import 'package:chainly/core/utils/favicon_getter.dart';
 import 'package:chainly/core/utils/number_format.dart';
 import 'package:chainly/data/models/category_model.dart';
 import 'dart:ui';
@@ -102,6 +103,22 @@ class TransactionsHomeSection extends StatelessWidget {
       return isExpense ? Icons.shopping_bag_outlined : Icons.savings_outlined;
     }
 
+    Widget getIconWidget() {
+      if (transaction.store != null && transaction.store!.website != null && transaction.store!.website!.isNotEmpty) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(50), 
+          child: Image.network(
+            FaviconGetter.getFaviconUrl(transaction.store!.website!),
+            width: 24,
+            height: 24,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(getIcon(), color: AppColors.black, size: 24),
+          ),
+        );
+      }
+      return Icon(getIcon(), color: AppColors.black, size: 24);
+    }
+
     return Container(
       width: 160,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
@@ -129,7 +146,7 @@ class TransactionsHomeSection extends StatelessWidget {
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(getIcon(), color: AppColors.black, size: 24),
+                      child: getIconWidget(),
                     ),
                     Text(
                       transaction.wallet.currency,
@@ -163,6 +180,12 @@ class TransactionsHomeSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    Text(
+                       category.name,
+                       style: TextStyle(fontSize: 10, color: Colors.grey[700], fontWeight: FontWeight.bold),
+                       maxLines: 1,
+                       overflow: TextOverflow.ellipsis,
+                    ),
                     Text(
                       '${transaction.transaction.date.day}/${transaction.transaction.date.month}',
                       style: TextStyle(fontSize: 11, color: Colors.grey[600]),

@@ -11,6 +11,7 @@ import 'package:chainly/presentation/pages/main/home_screen/components/wallets_h
 import 'package:chainly/presentation/pages/main/home_screen/components/subscriptions_home_section.dart';
 import 'package:chainly/domain/providers/wallet_provider.dart';
 import 'package:chainly/domain/providers/category_provider.dart';
+import 'package:chainly/domain/providers/store_provider.dart';
 import 'package:chainly/domain/providers/transaction_provider.dart';
 import 'package:chainly/data/models/transaction_model.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -73,16 +74,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final walletsAsync = ref.watch(walletsProvider(const WalletFilters(includeArchived: false)));
     final categoriesAsync = ref.watch(categoriesProvider);
     final recentTransactionsAsync = ref.watch(recentTransactionsProvider);
+    final storesAsync = ref.watch(storesProvider);
 
     // Determine loading state
     final bool isLoading = walletsAsync.isLoading ||
         categoriesAsync.isLoading ||
-        recentTransactionsAsync.isLoading;
+        recentTransactionsAsync.isLoading ||
+        storesAsync.isLoading;
 
     // Prepare data (use dummy if loading, otherwise real data or empty list)
     final wallets = walletsAsync.asData?.value ?? (isLoading ? _dummyWallets : []);
     final categories = categoriesAsync.asData?.value ?? (isLoading ? _dummyCategories : []);
     final transactions = recentTransactionsAsync.asData?.value ?? (isLoading ? _dummyTransactions : []);
+    final stores = storesAsync.asData?.value ?? [];
 
     // Create TransactionWithDetails list
     final transactionsWithDetails = transactions.map((t) {
@@ -113,10 +117,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
 
+      final store = stores.where((s) => s.id == t.storeId).firstOrNull;
+
       return TransactionWithDetails(
         transaction: t,
         wallet: wallet,
         category: category,
+        store: store,
       );
     }).toList();
 
@@ -126,6 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.invalidate(categoriesProvider);
         ref.invalidate(recentTransactionsProvider);
         ref.invalidate(subscriptionsProvider);
+        ref.invalidate(storesProvider);
       },
       child: Skeletonizer(
         enabled: isLoading,

@@ -12,6 +12,7 @@ import 'package:chainly/presentation/pages/main/profile_screen/profile_screen.da
 import 'package:chainly/presentation/widgets/navigation/app_drawer.dart';
 import 'package:chainly/core/database/env.dart';
 import 'package:chainly/presentation/pages/tests_page.dart';
+import 'package:chainly/presentation/pages/main/stores_screen/store_list_screen.dart';
 
 class MainDrawerNav extends ConsumerStatefulWidget {
   const MainDrawerNav({super.key});
@@ -29,6 +30,7 @@ class _MainDrawerNavState extends ConsumerState<MainDrawerNav> {
     const StatsScreen(),
     const CategoriesScreen(),
     const SubscriptionsScreen(),
+    const StoreListScreen(),
     const ProfileScreen(),
     const SettingsScreen(),
     if (Env.enviroment == 'DEV') const TestsPage(),

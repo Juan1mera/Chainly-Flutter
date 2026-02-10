@@ -5,20 +5,51 @@ import 'package:chainly/core/constants/fonts.dart';
 import 'package:chainly/core/utils/number_format.dart';
 import 'package:chainly/data/models/transaction_model.dart';
 import 'package:chainly/data/models/category_model.dart';
+import 'package:chainly/data/models/store_model.dart';
+import 'package:chainly/core/utils/favicon_getter.dart';
 
 class TransactionCardSimple extends StatelessWidget {
   final Transaction transaction;
   final Category category;
+  final Store? store; // Nuevo parametro
   final String currencySymbol;
 
   const TransactionCardSimple({
     super.key,
     required this.transaction,
     required this.category,
+    this.store,
     required this.currencySymbol,
   });
 
-  IconData _getIcon() {
+  Widget _getIconWidget() {
+    // 1. Si hay store con website, mostrar favicon
+    if (store?.website != null && store!.website!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10), // Un poco menos que el contenedor
+        child: Image.network(
+          FaviconGetter.getFaviconUrl(store!.website!),
+          width: 26,
+          height: 26,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            _getCategoryIcon(),
+             color: AppColors.black,
+             size: 26,
+          ),
+        ),
+      );
+    }
+
+    // 2. Si no, mostrar icono de categoría
+    return Icon(
+      _getCategoryIcon(),
+      color: AppColors.black,
+      size: 26,
+    );
+  }
+
+  IconData _getCategoryIcon() {
     if (category.icon != null && category.icon!.isNotEmpty) {
       final code = int.tryParse(category.icon!, radix: 16);
       if (code != null) {
@@ -63,11 +94,7 @@ class TransactionCardSimple extends StatelessWidget {
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(
-                    _getIcon(),
-                    color: AppColors.black,
-                    size: 26,
-                  ),
+                  child: _getIconWidget(),
                 ),
 
                 const SizedBox(width: 14),
@@ -93,7 +120,7 @@ class TransactionCardSimple extends StatelessWidget {
                         _formatTime(transaction.date),
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: AppColors.greyDark,
                         ),
                       ),
                     ],
